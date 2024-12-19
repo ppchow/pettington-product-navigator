@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
-import Layout from '@/components/Layout';
-import ProductGrid from '@/components/ProductGrid';
 import { getShopifyClient } from '@/lib/shopify';
+import ProductGrid from '@/components/ProductGrid';
+import Layout from '@/components/Layout';
+
+interface Collection {
+  handle: string;
+  title: string;
+}
 
 export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
-  const [collections, setCollections] = useState<Array<{ handle: string; title: string }>>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>('prescription-diet-cats-dogs');
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
@@ -39,7 +44,7 @@ export default function Home() {
         const shopify = getShopifyClient();
         const collectionsData = await shopify.getCollections();
         // Filter collections to only include allowed ones
-        const filteredCollections = collectionsData.filter(collection => 
+        const filteredCollections = collectionsData.filter((collection: Collection) =>
           allowedCollections.includes(collection.handle)
         );
         console.log('Filtered collections:', filteredCollections);
