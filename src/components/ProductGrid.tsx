@@ -7,7 +7,6 @@ interface Product {
   title: string;
   vendor: string;
   imageUrl: string;
-  imageAltText: string;
   variants: Array<{
     id: string;
     price: string;
@@ -36,7 +35,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
           <div className="relative w-full h-64">
             <Image
               src={product.imageUrl}
-              alt={product.imageAltText || product.title}
+              alt={product.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover"
