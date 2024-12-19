@@ -1,4 +1,4 @@
-import { openDB, DBSchema } from 'idb';
+import { openDB, DBSchema, IDBKeyRange } from 'idb';
 
 interface ProductType {
   id: string;
@@ -61,7 +61,7 @@ export async function getProductsByVendor(vendor: string) {
 
 export async function getProductsByTag(tag: string) {
   const db = await initDB();
-  const products = await db.getAllFromIndex('products', 'by-tags', tag);
+  const products = await db.getAllFromIndex('products', 'by-tags', IDBKeyRange.only(tag));
   return products;
 }
 
