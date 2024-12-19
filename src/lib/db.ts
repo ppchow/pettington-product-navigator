@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBKeyRange } from 'idb';
+import { openDB, DBSchema } from 'idb';
 
 interface ProductType {
   id: string;
