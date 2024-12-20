@@ -27,7 +27,7 @@ interface ShopifyDBSchema extends DBSchema {
   };
 }
 
-const DB_NAME = 'shopify-product-navigator';
+const DB_NAME = 'pettington-product-catalog';
 const DB_VERSION = 1;
 
 export async function initDB() {
