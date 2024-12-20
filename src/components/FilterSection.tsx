@@ -99,6 +99,10 @@ export default function FilterSection({
   collections,
   onCollectionSelect,
 }: FilterSectionProps) {
+  console.log('Received collections:', collections);
+  console.log('Collection order:', collectionOrder);
+  console.log('Collection titles:', collectionTitles);
+
   // Get the appropriate tags for the current collection
   const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
 

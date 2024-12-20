@@ -48,7 +48,7 @@ export function getShopifyClient() {
         `,
       });
 
-      console.log('Collections response:', response.body?.data?.collections?.edges);
+      console.log('Raw API Response:', JSON.stringify(response.body?.data, null, 2));
 
       const collections = response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
@@ -58,7 +58,7 @@ export function getShopifyClient() {
         })
       );
 
-      console.log('Processed collections:', collections);
+      console.log('Mapped Collections:', collections);
 
       return collections || [];
     },
