@@ -49,8 +49,19 @@ const collectionTags = {
 
 // Collection titles mapping
 const collectionTitles = {
-  'pet-supplements': '保健品及補充品'
+  'pet-supplements': '保健品及補充品',
+  'prescription-diet-cats-dogs': '獸醫處方糧',
+  'stella-chewys': "Stella & Chewy's",
+  'wellness-1': 'Wellness'
 };
+
+// Collection order
+const collectionOrder = [
+  'prescription-diet-cats-dogs',
+  'pet-supplements',
+  'stella-chewys',
+  'wellness-1'
+];
 
 const petTypes = ['Dog 狗', 'Cat 貓'];
 
@@ -87,59 +98,72 @@ export default function FilterSection({
   // Determine if we should show vendor filter for current collection
   const shouldShowVendorFilter = currentCollection !== 'pet-supplements' && showVendorFilter;
 
+  // Sort collections based on the order array
+  const sortedCollections = [...collections].sort((a, b) => {
+    const indexA = collectionOrder.indexOf(a.handle);
+    const indexB = collectionOrder.indexOf(b.handle);
+    return indexA - indexB;
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Collections</h3>
-        <div className="flex flex-wrap gap-2">
-          {collections.map((collection) => (
-            <button
-              key={collection.handle}
-              onClick={() => onCollectionSelect(collection.handle)}
-              className={`
-                px-3 py-1.5 rounded-full text-sm font-medium
-                transition-all duration-200 ease-in-out
-                flex items-center gap-1
-                ${
-                  currentCollection === collection.handle
-                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
-                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                }
-              `}
-            >
-              {collectionTitles[collection.handle as keyof typeof collectionTitles] || collection.title}
-              {currentCollection === collection.handle && (
-                <span className="ml-1 text-lg leading-none">&times;</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+      <div className="overflow-x-auto pb-2 -mx-4 px-4">
+        <div className="flex flex-nowrap gap-4 min-w-max">
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Collections</h3>
+            <div className="flex flex-nowrap gap-2">
+              {sortedCollections.map((collection) => (
+                <button
+                  key={collection.handle}
+                  onClick={() => onCollectionSelect(collection.handle)}
+                  className={`
+                    whitespace-nowrap
+                    px-3 py-1.5 rounded-full text-sm font-medium
+                    transition-all duration-200 ease-in-out
+                    flex items-center gap-1
+                    ${
+                      currentCollection === collection.handle
+                        ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {collectionTitles[collection.handle as keyof typeof collectionTitles] || collection.title}
+                  {currentCollection === collection.handle && (
+                    <span className="ml-1 text-lg leading-none">&times;</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Pet Type</h3>
-        <div className="flex flex-wrap gap-2">
-          {petTypes.map((type) => (
-            <button
-              key={type}
-              onClick={() => onPetTypeSelect(type)}
-              className={`
-                px-3 py-1.5 rounded-full text-sm font-medium
-                transition-all duration-200 ease-in-out
-                flex items-center gap-1
-                ${
-                  selectedPetTypes.includes(type)
-                    ? 'bg-green-100 text-green-800 border-2 border-green-300 hover:bg-green-200'
-                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                }
-              `}
-            >
-              {type}
-              {selectedPetTypes.includes(type) && (
-                <span className="ml-1 text-lg leading-none">&times;</span>
-              )}
-            </button>
-          ))}
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Pet Type</h3>
+            <div className="flex flex-nowrap gap-2">
+              {petTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => onPetTypeSelect(type)}
+                  className={`
+                    whitespace-nowrap
+                    px-3 py-1.5 rounded-full text-sm font-medium
+                    transition-all duration-200 ease-in-out
+                    flex items-center gap-1
+                    ${
+                      selectedPetTypes.includes(type)
+                        ? 'bg-green-100 text-green-800 border-2 border-green-300 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {type}
+                  {selectedPetTypes.includes(type) && (
+                    <span className="ml-1 text-lg leading-none">&times;</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
