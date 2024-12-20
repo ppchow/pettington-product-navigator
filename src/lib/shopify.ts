@@ -46,41 +46,17 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
-    // First, try to get the metaobject definition
-    const definitionResponse = await shopifyFetch({
-      query: `
-        query {
-          metaobjectDefinitions(first: 10) {
-            edges {
-              node {
-                name
-                type
-                fieldDefinitions {
-                  name
-                  key
-                }
-              }
-            }
-          }
-        }
-      `
-    });
-
-    console.log('Available metaobject definitions:', definitionResponse.body?.data?.metaobjectDefinitions);
-
     const response = await shopifyFetch({
       query: `
-        query GetDiscountSettings {
-          metaobjects(type: "event_discount_settings", first: 1) {
-            edges {
-              node {
-                handle
-                type
-                fields {
-                  key
-                  value
-                }
-              }
+        query {
+          metaobject(
+            handle: "event_discount_settings"
+            type: "event_discount_settings"
+          ) {
+            handle
+            fields {
+              key
+              value
             }
           }
         }
@@ -89,20 +65,19 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
 
     console.log('Raw metaobject response:', {
       status: response.status,
-      body: JSON.stringify(response.body, null, 2),
+      body: response.body,
       error: response.error
     });
 
     // Log the full response for debugging
     console.log('Full response structure:', {
       hasData: !!response.body?.data,
-      hasMetaobjects: !!response.body?.data?.metaobjects,
-      hasEdges: !!response.body?.data?.metaobjects?.edges,
+      hasMetaobject: !!response.body?.data?.metaobject,
+      hasFields: !!response.body?.data?.metaobject?.fields,
       data: response.body?.data
     });
 
-    const metaobject = response.body?.data?.metaobjects?.edges?.[0]?.node;
-    if (!metaobject?.fields) {
+    if (!response.body?.data?.metaobject?.fields) {
       console.error('No discount settings found. Response:', {
         status: response.status,
         body: response.body,
@@ -111,7 +86,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       throw new Error('Discount settings not found');
     }
 
-    const fields = metaobject.fields;
+    const fields = response.body.data.metaobject.fields;
     const settings = fields.reduce((acc: any, field: MetaobjectField) => {
       acc[field.key] = field.value;
       return acc;
