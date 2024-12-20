@@ -99,10 +99,12 @@ export default function FilterSection({
   collections,
   onCollectionSelect,
 }: FilterSectionProps) {
-  console.log('Raw collections prop:', collections);
-  console.log('Received collections:', collections);
-  console.log('Collection order:', collectionOrder);
-  console.log('Collection titles:', collectionTitles);
+  // Debug logs
+  React.useEffect(() => {
+    console.log('Raw collections prop:', collections);
+    console.log('Collection order:', collectionOrder);
+    console.log('Collection titles:', collectionTitles);
+  }, [collections]);
 
   // Get the appropriate tags for the current collection
   const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
@@ -111,11 +113,15 @@ export default function FilterSection({
   const shouldShowVendorFilter = currentCollection !== 'pet-supplements' && showVendorFilter;
 
   // Sort collections based on the order array
-  const sortedCollections = [...collections].sort((a, b) => {
-    const indexA = collectionOrder.indexOf(a.handle);
-    const indexB = collectionOrder.indexOf(b.handle);
-    return indexA - indexB;
-  });
+  const sortedCollections = React.useMemo(() => {
+    const sorted = [...collections].sort((a, b) => {
+      const indexA = collectionOrder.indexOf(a.handle);
+      const indexB = collectionOrder.indexOf(b.handle);
+      return indexA - indexB;
+    });
+    console.log('Sorted collections:', sorted);
+    return sorted;
+  }, [collections]);
 
   return (
     <div className="space-y-6">
@@ -124,7 +130,6 @@ export default function FilterSection({
           <div>
             <h3 className="text-lg font-semibold mb-3">Collections</h3>
             <div className="flex flex-nowrap gap-2 pr-4">
-              {console.log('Sorted collections before render:', sortedCollections)}
               {sortedCollections.map((collection) => (
                 <button
                   key={collection.handle}
