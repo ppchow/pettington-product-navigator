@@ -44,6 +44,11 @@ const collectionTags = {
     '糖尿病處方糧',
     '體重控制處方糧'
   ],
+  'pet-grooming': [
+    '洗毛水及護毛素',
+    '皮膚/眼睛及耳朵護理',
+    '美容用品'
+  ],
   'default': []
 };
 
@@ -52,7 +57,8 @@ const collectionTitles = {
   'pet-supplements': '保健品及補充品',
   'prescription-diet-cats-dogs': '獸醫處方糧',
   'stella-chewys': "Stella & Chewy's",
-  'wellness-1': 'Wellness'
+  'wellness-1': 'Wellness',
+  'pet-grooming': '美容及清潔護理'
 };
 
 // Collection order
@@ -60,7 +66,8 @@ const collectionOrder = [
   'prescription-diet-cats-dogs',
   'pet-supplements',
   'stella-chewys',
-  'wellness-1'
+  'wellness-1',
+  'pet-grooming'
 ];
 
 const petTypes = ['Dog 狗', 'Cat 貓'];
