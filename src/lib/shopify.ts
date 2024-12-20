@@ -127,6 +127,11 @@ export function getShopifyClient() {
     getProductsByCollection: async (collectionHandle: string): Promise<Product[]> => {
       console.log('Fetching products for collection:', collectionHandle);
       
+      // First fetch discount settings
+      const discountSettings = await getDiscountSettings();
+      console.log('Fetched discount settings:', discountSettings);
+
+      // Then fetch products
       const response = await shopifyFetch({
         query: `
           query GetProductsByCollection($handle: String!) {
@@ -179,10 +184,18 @@ export function getShopifyClient() {
 
       console.log('Products response:', response);
 
-      const discountSettings = await getDiscountSettings();
-      console.log('Discount settings for products:', discountSettings);
+      if (!response.body?.data?.collection?.products?.edges) {
+        console.error('No products found in response:', response);
+        return [];
+      }
 
-      return response.body?.data?.collection?.products?.edges?.map(
+      // Store discount settings in window for debugging
+      if (typeof window !== 'undefined') {
+        (window as any).__discountSettings = discountSettings;
+        console.log('Stored discount settings in window.__discountSettings');
+      }
+
+      return response.body.data.collection.products.edges.map(
         ({ node }: any): Product => {
           const price = formatPrice(node.priceRange.minVariantPrice.amount);
           const baseProduct = {
@@ -209,6 +222,12 @@ export function getShopifyClient() {
           };
 
           const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
+          console.log('Calculated discount for product:', {
+            title: baseProduct.title,
+            originalPrice: baseProduct.price,
+            discountedPrice,
+            discountPercentage
+          });
 
           return {
             ...baseProduct,
@@ -216,7 +235,7 @@ export function getShopifyClient() {
             discountPercentage,
           };
         }
-      ) || [];
+      );
     },
   };
 }

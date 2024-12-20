@@ -10,7 +10,6 @@ export default function ProductCard({ product }: { product: Product }) {
       await navigator.clipboard.writeText(sku);
       setCopiedSku(sku);
       setTimeout(() => setCopiedSku(null), 2000);
-      console.log('Copied SKU:', sku); // Debug log
     } catch (err) {
       console.error('Failed to copy SKU:', err);
     }
@@ -53,15 +52,22 @@ export default function ProductCard({ product }: { product: Product }) {
               <div key={variant.id} className="flex flex-col space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">{variant.title}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-500">{variant.sku}</span>
-                    <button
-                      onClick={() => handleCopySku(variant.sku)}
-                      className="text-blue-600 hover:text-blue-800 ml-2"
-                    >
-                      {copiedSku === variant.sku ? 'Copied!' : 'Copy'}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleCopySku(variant.sku)}
+                    className="flex items-center text-gray-500 hover:text-blue-600"
+                    title="Click to copy SKU"
+                  >
+                    <span className="mr-1">{variant.sku}</span>
+                    {copiedSku === variant.sku ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className={variant.isAvailable ? 'text-green-600' : 'text-red-600'}>

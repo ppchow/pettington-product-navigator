@@ -4,6 +4,7 @@ import Layout from '@/components/Layout';
 import FilterSection from '@/components/FilterSection';
 import ProductCard from '../components/ProductCard';
 import { Product } from '@/types';
+import DebugPanel from '@/components/DebugPanel';
 
 interface Collection {
   handle: string;
@@ -25,6 +26,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [discountSettings, setDiscountSettings] = useState(null);
 
   // Filter states
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
@@ -234,6 +236,7 @@ export default function Home() {
             </div>
           </>
         )}
+        {discountSettings && <DebugPanel discountSettings={discountSettings} />}
       </div>
     </Layout>
   );
