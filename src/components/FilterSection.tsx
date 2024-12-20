@@ -26,12 +26,22 @@ const collectionTags = {
     '關節護理',
     '體重控制'
   ],
-  'default': [
-    '腸胃處方糧',
-    '泌尿道處方糧',
-    '腎臟處方糧',
-    '低敏處方糧'
-  ]
+  'pet-supplements': [
+    '驅蟲除蚤產品',
+    '益生菌/腸道健康',
+    '皮膚/眼睛及耳朵護理',
+    '泌尿道健康',
+    '關節保健',
+    '腎臟及肝臟健康',
+    '心血管健康',
+    '口腔護理'
+  ],
+  'default': []
+};
+
+// Collection titles mapping
+const collectionTitles = {
+  'pet-supplements': '保健品及補充品'
 };
 
 const petTypes = ['Dog 狗', 'Cat 貓'];
@@ -66,6 +76,9 @@ export default function FilterSection({
   // Get the appropriate tags for the current collection
   const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
 
+  // Determine if we should show vendor filter for current collection
+  const shouldShowVendorFilter = currentCollection !== 'pet-supplements' && showVendorFilter;
+
   return (
     <div className="space-y-6">
       <div>
@@ -86,7 +99,7 @@ export default function FilterSection({
                 }
               `}
             >
-              {collection.title}
+              {collectionTitles[collection.handle as keyof typeof collectionTitles] || collection.title}
               {currentCollection === collection.handle && (
                 <span className="ml-1 text-lg leading-none">&times;</span>
               )}
@@ -122,7 +135,7 @@ export default function FilterSection({
         </div>
       </div>
 
-      {showVendorFilter && (
+      {shouldShowVendorFilter && (
         <div>
           <h3 className="text-lg font-semibold mb-3">Vendors</h3>
           <div className="flex flex-wrap gap-2">
@@ -151,32 +164,34 @@ export default function FilterSection({
         </div>
       )}
 
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Product Type</h3>
-        <div className="flex flex-wrap gap-2">
-          {availableTags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => onTagSelect(tag)}
-              className={`
-                px-3 py-1.5 rounded-full text-sm font-medium
-                transition-all duration-200 ease-in-out
-                flex items-center gap-1
-                ${
-                  selectedTags.includes(tag)
-                    ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-200'
-                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                }
-              `}
-            >
-              {tag}
-              {selectedTags.includes(tag) && (
-                <span className="ml-1 text-lg leading-none">&times;</span>
-              )}
-            </button>
-          ))}
+      {availableTags.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Product Type</h3>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => onTagSelect(tag)}
+                className={`
+                  px-3 py-1.5 rounded-full text-sm font-medium
+                  transition-all duration-200 ease-in-out
+                  flex items-center gap-1
+                  ${
+                    selectedTags.includes(tag)
+                      ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-200'
+                      : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                  }
+                `}
+              >
+                {tag}
+                {selectedTags.includes(tag) && (
+                  <span className="ml-1 text-lg leading-none">&times;</span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {(selectedVendors.length > 0 || selectedTags.length > 0 || selectedPetTypes.length > 0) && (
         <div className="pt-2">
