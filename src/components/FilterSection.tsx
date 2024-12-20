@@ -99,6 +99,7 @@ export default function FilterSection({
   collections,
   onCollectionSelect,
 }: FilterSectionProps) {
+  console.log('Raw collections prop:', collections);
   console.log('Received collections:', collections);
   console.log('Collection order:', collectionOrder);
   console.log('Collection titles:', collectionTitles);
@@ -123,6 +124,7 @@ export default function FilterSection({
           <div>
             <h3 className="text-lg font-semibold mb-3">Collections</h3>
             <div className="flex flex-nowrap gap-2 pr-4">
+              {console.log('Sorted collections before render:', sortedCollections)}
               {sortedCollections.map((collection) => (
                 <button
                   key={collection.handle}
