@@ -86,7 +86,7 @@ export default function Home() {
         setProducts(productsData);
         
         // Extract unique vendors
-        const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor)));
+        const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
         setAvailableVendors(vendors);
         
         // Initialize filtered products
