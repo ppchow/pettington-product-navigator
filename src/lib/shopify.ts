@@ -45,23 +45,45 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 }
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
-  const response = await shopifyFetch({
-    query: `
-      query GetDiscountSettings {
-        metaobject(handle: "event-discount-settings-8rafyxmo") {
-          fields {
-            key
-            value
+  try {
+    const response = await shopifyFetch({
+      query: `
+        {
+          metaobject(handle: "event-discount-settings-8rafyxmo") {
+            handle
+            type
+            fields {
+              key
+              value
+            }
           }
         }
-      }
-    `,
-  });
+      `,
+    });
 
-  console.log('Discount settings response:', response);
+    console.log('Raw metaobject response:', JSON.stringify(response, null, 2));
 
-  if (!response.body?.data?.metaobject?.fields) {
-    console.error('No discount settings found:', response);
+    if (!response.body?.data?.metaobject?.fields) {
+      console.error('No discount settings found:', response);
+      throw new Error('Discount settings not found');
+    }
+
+    const fields = response.body.data.metaobject.fields as MetaobjectField[];
+    console.log('Metaobject fields:', fields);
+
+    const settings = {
+      prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
+      prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
+      parasite_enabled: fields.find(f => f.key === 'parasite_enabled')?.value === 'true',
+      parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage')?.value || '0'),
+      default_enabled: fields.find(f => f.key === 'default_enabled')?.value === 'true',
+      default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage')?.value || '0'),
+    };
+
+    console.log('Parsed discount settings:', settings);
+    return settings;
+  } catch (error) {
+    console.error('Error fetching discount settings:', error);
     return {
       prescription_enabled: false,
       prescription_percentage: 0,
@@ -71,19 +93,6 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       default_percentage: 0,
     };
   }
-
-  const fields = response.body.data.metaobject.fields as MetaobjectField[];
-  const settings = {
-    prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
-    prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
-    parasite_enabled: fields.find(f => f.key === 'parasite_enabled')?.value === 'true',
-    parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage')?.value || '0'),
-    default_enabled: fields.find(f => f.key === 'default_enabled')?.value === 'true',
-    default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage')?.value || '0'),
-  };
-
-  console.log('Parsed discount settings:', settings);
-  return settings;
 }
 
 export function getShopifyClient() {
@@ -105,8 +114,7 @@ export function getShopifyClient() {
         `,
       });
 
-      console.log('Collections response:', response); // Debug log
-
+      console.log('Collections response:', response);
       return response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
           id: node.id,
@@ -117,7 +125,7 @@ export function getShopifyClient() {
     },
 
     getProductsByCollection: async (collectionHandle: string): Promise<Product[]> => {
-      console.log('Fetching products for collection:', collectionHandle); // Debug log
+      console.log('Fetching products for collection:', collectionHandle);
       
       const response = await shopifyFetch({
         query: `
@@ -150,6 +158,7 @@ export function getShopifyClient() {
                         node {
                           id
                           title
+                          sku
                           priceV2 {
                             amount
                           }
@@ -168,12 +177,12 @@ export function getShopifyClient() {
         },
       });
 
-      console.log('Products response:', response); // Debug log
+      console.log('Products response:', response);
 
       const discountSettings = await getDiscountSettings();
-      console.log('Discount settings:', discountSettings); // Debug log
+      console.log('Discount settings for products:', discountSettings);
 
-      const products = response.body?.data?.collection?.products?.edges?.map(
+      return response.body?.data?.collection?.products?.edges?.map(
         ({ node }: any): Product => {
           const price = formatPrice(node.priceRange.minVariantPrice.amount);
           const baseProduct = {
@@ -192,7 +201,8 @@ export function getShopifyClient() {
               id: edge.node.id,
               title: edge.node.title,
               price: formatPrice(edge.node.priceV2.amount),
-              isAvailable: edge.node.availableForSale
+              isAvailable: edge.node.availableForSale,
+              sku: edge.node.sku || ''
             })),
             discountedPrice: null,
             discountPercentage: null
@@ -207,9 +217,6 @@ export function getShopifyClient() {
           };
         }
       ) || [];
-
-      console.log('Mapped products:', products); // Debug log
-      return products;
     },
   };
 }

@@ -3,6 +3,7 @@ export interface Variant {
   title: string;
   price: string;
   isAvailable: boolean;
+  sku: string;
 }
 
 export interface DiscountSettings {

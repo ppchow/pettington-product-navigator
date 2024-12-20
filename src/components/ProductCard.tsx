@@ -10,8 +10,9 @@ export default function ProductCard({ product }: { product: Product }) {
       await navigator.clipboard.writeText(sku);
       setCopiedSku(sku);
       setTimeout(() => setCopiedSku(null), 2000);
+      console.log('Copied SKU:', sku); // Debug log
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy SKU:', err);
     }
   };
 
@@ -53,10 +54,10 @@ export default function ProductCard({ product }: { product: Product }) {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">{variant.title}</span>
                   <button
-                    onClick={() => handleCopySku(variant.id)}
+                    onClick={() => handleCopySku(variant.sku)}
                     className="text-blue-600 hover:text-blue-800"
                   >
-                    {copiedSku === variant.id ? 'Copied!' : 'Copy SKU'}
+                    {copiedSku === variant.sku ? 'Copied!' : 'Copy SKU'}
                   </button>
                 </div>
                 <div className="flex justify-between items-center">
