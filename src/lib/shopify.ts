@@ -46,6 +46,20 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
+    // Temporary hardcoded settings until we get API access
+    const settings = {
+      prescription_enabled: true,
+      prescription_percentage: 20,
+      parasite_enabled: true,
+      parasite_percentage: 15,
+      default_enabled: true,
+      default_percentage: 10
+    };
+
+    console.log('Using temporary discount settings:', settings);
+    return settings;
+
+    /* Commented out until we get API access
     const response = await shopifyFetch({
       query: `
         {
@@ -82,6 +96,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       default_enabled: settings.default_enabled === 'true',
       default_percentage: parseFloat(settings.default_percentage || '0'),
     };
+    */
   } catch (error) {
     console.error('Error fetching discount settings:', error);
     return {
