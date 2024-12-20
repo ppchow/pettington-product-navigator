@@ -40,6 +40,7 @@ export default function Home() {
   // Filter states
   const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedPetTypes, setSelectedPetTypes] = useState<string[]>([]);
   const [availableVendors, setAvailableVendors] = useState<string[]>([]);
 
   // List of allowed collections
@@ -114,13 +115,33 @@ export default function Home() {
 
   // Apply filters
   useEffect(() => {
-    const filtered = products.filter(product => {
-      const vendorMatch = selectedVendors.length === 0 || selectedVendors.includes(product.vendor);
-      const tagMatch = selectedTags.length === 0 || selectedTags.some(tag => product.tags.includes(tag));
-      return vendorMatch && tagMatch;
-    });
+    if (!products) return;
+
+    let filtered = [...products];
+
+    // Apply pet type filter
+    if (selectedPetTypes.length > 0) {
+      filtered = filtered.filter(product =>
+        selectedPetTypes.some(type => product.tags.includes(type))
+      );
+    }
+
+    // Apply vendor filter
+    if (selectedVendors.length > 0) {
+      filtered = filtered.filter(product =>
+        selectedVendors.includes(product.vendor)
+      );
+    }
+
+    // Apply tag filter
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(product =>
+        selectedTags.some(tag => product.tags.includes(tag))
+      );
+    }
+
     setFilteredProducts(filtered);
-  }, [products, selectedVendors, selectedTags]);
+  }, [products, selectedVendors, selectedTags, selectedPetTypes]);
 
   // Handle filter changes
   const handleVendorChange = (vendor: string) => {
@@ -139,7 +160,16 @@ export default function Home() {
     );
   };
 
+  const handlePetTypeChange = (type: string) => {
+    setSelectedPetTypes(prev =>
+      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+    );
+  };
+
   const predefinedTags = ['tag1', 'tag2', 'tag3'];
+
+  // Determine if vendor filter should be shown
+  const showVendorFilter = !['Stella & Chewy', 'Wellness'].includes(selectedCollection);
 
   return (
     <Layout>
@@ -190,6 +220,9 @@ export default function Home() {
             onVendorSelect={handleVendorChange}
             selectedTags={selectedTags}
             onTagSelect={handleTagChange}
+            selectedPetTypes={selectedPetTypes}
+            onPetTypeSelect={handlePetTypeChange}
+            showVendorFilter={showVendorFilter}
           />
         </div>
 
