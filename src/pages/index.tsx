@@ -14,10 +14,18 @@ interface Product {
   title: string;
   handle: string;
   description: string;
-  imageUrl: string;
-  price: string;
   vendor: string;
   tags: string[];
+  price: string;
+  imageUrl: string;
+  imageAltText: string;
+  collection?: string;
+  variants: {
+    id: string;
+    weight: number;
+    price: string;
+    available: boolean;
+  }[];
 }
 
 export default function Home() {

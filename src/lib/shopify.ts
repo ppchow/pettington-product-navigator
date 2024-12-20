@@ -85,9 +85,10 @@ export function getShopifyClient() {
                         }
                       }
                     }
-                    variants(first: 1) {
+                    variants(first: 250) {
                       edges {
                         node {
+                          id
                           price {
                             amount
                             currencyCode
@@ -120,6 +121,13 @@ export function getShopifyClient() {
           }).format(node.priceRange.minVariantPrice.amount),
           imageUrl: node.images.edges[0]?.node.url || '',
           imageAltText: node.images.edges[0]?.node.altText || node.title,
+          collection: collectionHandle,
+          variants: node.variants.edges.map((edge: any) => ({
+            id: edge.node.id,
+            price: `${edge.node.price.amount} ${edge.node.price.currencyCode}`,
+            weight: 0,
+            available: true
+          }))
         })
       );
 
