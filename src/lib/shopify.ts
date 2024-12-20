@@ -49,7 +49,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     const response = await shopifyFetch({
       query: `
         {
-          metaobject(handle: "event_discount_settings") {
+          metaobject(handle: {handle: "event_discount_settings", type: "event_discount_settings"}) {
             fields {
               key
               value
