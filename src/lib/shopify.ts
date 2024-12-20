@@ -46,17 +46,24 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     const response = await shopifyFetch({
       query: `
         query GetDiscountSettings {
-          metaobject(handle: { handle: "discount_settings", type: "event_discount_settings" }) {
-            fields {
-              key
-              value
+          metaobjects(type: "event_discount_settings", first: 1) {
+            edges {
+              node {
+                fields {
+                  key
+                  value
+                }
+              }
             }
           }
         }
       `,
     });
 
-    if (!response.body?.data?.metaobject?.fields) {
+    const metaobject = response.body?.data?.metaobjects?.edges?.[0]?.node;
+    
+    if (!metaobject?.fields) {
+      console.error('No discount settings found in metaobject');
       return {
         prescription_enabled: false,
         prescription_percentage: 0,
@@ -67,7 +74,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       };
     }
 
-    const fields = response.body.data.metaobject.fields as MetaobjectField[];
+    const fields = metaobject.fields as MetaobjectField[];
     return {
       prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
       prescription_percentage: Number(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
