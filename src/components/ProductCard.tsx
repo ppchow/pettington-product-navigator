@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-
-interface Variant {
-  id: string;
-  title: string;
-  price: string;
-  sku: string;
-  isAvailable: boolean;
-}
+import { Variant } from '@/types';
 
 interface ProductCardProps {
   title: string;

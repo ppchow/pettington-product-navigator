@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getShopifyClient } from '@/lib/shopify';
-import ProductGrid from '@/components/ProductGrid';
 import Layout from '@/components/Layout';
 import FilterSection from '@/components/FilterSection';
 import ProductCard from '../components/ProductCard';
+import { Product } from '@/types';
 
 interface Collection {
   handle: string;
@@ -14,21 +14,6 @@ interface Variant {
   id: string;
   title: string;
   price: string;
-  isAvailable: boolean;
-}
-
-interface Product {
-  id: string;
-  title: string;
-  handle: string;
-  description: string;
-  vendor: string;
-  tags: string[];
-  price: string;
-  imageUrl: string;
-  imageAltText: string;
-  collection: string;
-  variants: Variant[];
   isAvailable: boolean;
 }
 

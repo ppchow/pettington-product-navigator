@@ -1,3 +1,5 @@
+import { Product } from '@/types';
+
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
 const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
 
@@ -113,7 +115,7 @@ export function getShopifyClient() {
       });
 
       const products = response.body?.data?.collection?.products?.edges?.map(
-        ({ node }: any) => ({
+        ({ node }: any): Product => ({
           id: node.id,
           title: node.title,
           handle: node.handle,
