@@ -46,11 +46,12 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
-    // Try to get the specific metaobject by global ID
+    // Try to get the specific metaobject by reference
     const response = await shopifyFetch({
       query: `
         query {
           metaobject(id: "gid://shopify/Metaobject/81585340616") {
+            id
             handle
             type
             fields {
@@ -58,18 +59,36 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
               value
             }
           }
+          metaobjects(type: "event_discount_settings", first: 1) {
+            edges {
+              node {
+                id
+                handle
+                type
+                fields {
+                  key
+                  value
+                }
+              }
+            }
+          }
         }
       `,
     });
 
-    console.log('Metaobject response:', {
+    console.log('Full API response:', {
       status: response.status,
       body: response.body,
       error: response.error,
-      data: response.body?.data
+      data: response.body?.data,
+      hasMetaobject: !!response.body?.data?.metaobject,
+      hasMetaobjects: !!response.body?.data?.metaobjects?.edges?.length
     });
 
-    const metaobject = response.body?.data?.metaobject;
+    // Try to get metaobject from either query
+    const metaobject = response.body?.data?.metaobject || 
+                      response.body?.data?.metaobjects?.edges?.[0]?.node;
+
     if (metaobject?.fields) {
       const fields = metaobject.fields;
       const settings = fields.reduce((acc: any, field: MetaobjectField) => {
@@ -93,7 +112,11 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     }
 
     // If we can't find the metaobject, return default settings
-    console.error('No discount settings found');
+    console.warn('Could not access metaobject data. Using default settings. Please check:');
+    console.warn('1. Storefront API token has unauthenticated_read_metaobjects scope');
+    console.warn('2. Metaobject type is exactly "event_discount_settings"');
+    console.warn('3. Metaobject is published and accessible');
+    
     return {
       prescription_enabled: true,
       prescription_percentage: 10,
