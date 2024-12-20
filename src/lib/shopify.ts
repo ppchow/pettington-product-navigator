@@ -46,13 +46,63 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
+    // First try to list all metaobjects of this type
+    const listResponse = await shopifyFetch({
+      query: `
+        query {
+          metaobjects(type: "event_discount_settings", first: 10) {
+            edges {
+              node {
+                id
+                handle
+                type
+                fields {
+                  key
+                  value
+                }
+              }
+            }
+          }
+        }
+      `,
+    });
+
+    console.log('List of metaobjects:', {
+      status: listResponse.status,
+      body: listResponse.body,
+      error: listResponse.error,
+      edges: listResponse.body?.data?.metaobjects?.edges
+    });
+
+    // If listing works, use the first metaobject we find
+    const firstMetaobject = listResponse.body?.data?.metaobjects?.edges?.[0]?.node;
+    if (firstMetaobject?.fields) {
+      const fields = firstMetaobject.fields;
+      const settings = fields.reduce((acc: any, field: MetaobjectField) => {
+        acc[field.key] = field.value;
+        return acc;
+      }, {});
+
+      console.log('Raw settings from list:', settings);
+
+      const parsedSettings = {
+        prescription_enabled: settings.prescription_enabled === 'true',
+        prescription_percentage: parseFloat(settings.prescription_percentage || '0'),
+        parasite_enabled: settings.parasite_enabled === 'true',
+        parasite_percentage: parseFloat(settings.parasite_percentage || '0'),
+        default_enabled: settings.default_enabled === 'true',
+        default_percentage: parseFloat(settings.default_percentage || '0'),
+      };
+
+      console.log('Parsed discount settings:', parsedSettings);
+      return parsedSettings;
+    }
+
+    // If listing fails, try direct query
     const response = await shopifyFetch({
       query: `
         query {
-          metaobject(
-            handle: "event_discount_settings"
-            type: "event_discount_settings"
-          ) {
+          metaobject(handle: {handle: "81585340616", type: "event_discount_settings"}) {
             handle
             fields {
               key
@@ -67,14 +117,6 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       status: response.status,
       body: response.body,
       error: response.error
-    });
-
-    // Log the full response for debugging
-    console.log('Full response structure:', {
-      hasData: !!response.body?.data,
-      hasMetaobject: !!response.body?.data?.metaobject,
-      hasFields: !!response.body?.data?.metaobject?.fields,
-      data: response.body?.data
     });
 
     if (!response.body?.data?.metaobject?.fields) {
