@@ -109,9 +109,9 @@ export default function FilterSection({
     <div className="space-y-6">
       <div className="overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
         <div className="flex flex-nowrap gap-4">
-          <div className="max-w-[calc(100vw-3rem)]">
+          <div>
             <h3 className="text-lg font-semibold mb-3">Collections</h3>
-            <div className="flex flex-nowrap gap-2 mask-fade-right">
+            <div className="flex flex-nowrap gap-2 pr-4">
               {sortedCollections.map((collection) => (
                 <button
                   key={collection.handle}
@@ -120,7 +120,7 @@ export default function FilterSection({
                     whitespace-nowrap
                     px-3 py-1.5 rounded-full text-sm font-medium
                     transition-all duration-200 ease-in-out
-                    flex items-center gap-1
+                    flex items-center gap-1 shrink-0
                     ${
                       currentCollection === collection.handle
                         ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
@@ -137,7 +137,7 @@ export default function FilterSection({
             </div>
           </div>
 
-          <div>
+          <div className="shrink-0">
             <h3 className="text-lg font-semibold mb-3">Pet Type</h3>
             <div className="flex flex-nowrap gap-2">
               {petTypes.map((type) => (
@@ -148,7 +148,7 @@ export default function FilterSection({
                     whitespace-nowrap
                     px-3 py-1.5 rounded-full text-sm font-medium
                     transition-all duration-200 ease-in-out
-                    flex items-center gap-1
+                    flex items-center gap-1 shrink-0
                     ${
                       selectedPetTypes.includes(type)
                         ? 'bg-green-100 text-green-800 border-2 border-green-300 hover:bg-green-200'
