@@ -107,11 +107,11 @@ export default function FilterSection({
 
   return (
     <div className="space-y-6">
-      <div className="overflow-x-auto pb-2 -mx-4 px-4">
-        <div className="flex flex-nowrap gap-4 min-w-max">
-          <div>
+      <div className="overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+        <div className="flex flex-nowrap gap-4">
+          <div className="max-w-[calc(100vw-3rem)]">
             <h3 className="text-lg font-semibold mb-3">Collections</h3>
-            <div className="flex flex-nowrap gap-2">
+            <div className="flex flex-nowrap gap-2 mask-fade-right">
               {sortedCollections.map((collection) => (
                 <button
                   key={collection.handle}
