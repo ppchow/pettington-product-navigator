@@ -226,12 +226,7 @@ export default function Home() {
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
-                  title={product.title}
-                  imageUrl={product.imageUrl}
-                  imageAltText={product.imageAltText}
-                  price={product.price}
-                  variants={product.variants}
-                  isAvailable={product.isAvailable}
+                  product={product}
                 />
               ))}
             </div>

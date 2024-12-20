@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Variant, Product } from '@/types';
-
-interface ProductCardProps {
-  product: Product;
-}
+import { Product } from '@/types';
 
 export default function ProductCard({ product }: { product: Product }) {
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
