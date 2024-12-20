@@ -3,7 +3,6 @@ import { calculateDiscount, formatPrice } from './utils';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
 const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
-
 const endpoint = `https://${domain}/api/2024-01/graphql.json`;
 
 interface MetaobjectField {
@@ -79,22 +78,16 @@ export function getShopifyClient() {
         `,
       });
 
-      console.log('Raw API Response:', JSON.stringify(response.body?.data, null, 2));
-
-      const collections = response.body?.data?.collections?.edges?.map(
+      return response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
           id: node.id,
           handle: node.handle,
           title: node.title,
         })
-      );
-
-      console.log('Mapped Collections:', collections);
-
-      return collections || [];
+      ) || [];
     },
 
-    getProductsByCollection: async (collectionHandle: string) => {
+    getProductsByCollection: async (collectionHandle: string): Promise<Product[]> => {
       const response = await shopifyFetch({
         query: `
           query GetProductsByCollection($handle: String!) {
@@ -103,16 +96,14 @@ export function getShopifyClient() {
                 edges {
                   node {
                     id
-                    title
                     handle
+                    title
                     description
-                    tags
                     vendor
-                    availableForSale
+                    tags
                     priceRange {
                       minVariantPrice {
                         amount
-                        currencyCode
                       }
                     }
                     images(first: 1) {
@@ -123,86 +114,15 @@ export function getShopifyClient() {
                         }
                       }
                     }
-                    variants(first: 250) {
+                    variants(first: 100) {
                       edges {
                         node {
                           id
                           title
-                          sku
-                          availableForSale
-                          price {
+                          priceV2 {
                             amount
-                            currencyCode
                           }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `,
-        variables: {
-          handle: collectionHandle,
-        },
-      });
-
-      const products = response.body?.data?.collection?.products?.edges?.map(
-        ({ node }: any): Product => ({
-          id: node.id,
-          title: node.title,
-          handle: node.handle,
-          description: node.description,
-          vendor: node.vendor,
-          tags: node.tags,
-          price: new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: node.priceRange.minVariantPrice.currencyCode,
-          }).format(node.priceRange.minVariantPrice.amount),
-          imageUrl: node.images.edges[0]?.node.url || '',
-          imageAltText: node.images.edges[0]?.node.altText || node.title,
-          collection: response.body?.data?.collection?.handle || collectionHandle,
-          variants: node.variants.edges.map((edge: any) => ({
-            id: edge.node.id,
-            title: edge.node.title || '',
-            sku: edge.node.sku || '',
-            price: new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: edge.node.price.currencyCode,
-            }).format(edge.node.price.amount),
-            isAvailable: edge.node.availableForSale
-          })),
-        })
-      );
-
-      return products || [];
-    },
-
-    getProductsByCollectionWithDiscounts: async (collectionHandle: string) => {
-      const response = await shopifyFetch({
-        query: `
-          query GetProductsByCollection($handle: String!) {
-            collection(handle: $handle) {
-              products(first: 250) {
-                edges {
-                  node {
-                    id
-                    handle
-                    title
-                    description
-                    tags
-                    vendor
-                    priceRange {
-                      minVariantPrice {
-                        amount
-                      }
-                    }
-                    images(first: 1) {
-                      edges {
-                        node {
-                          url
-                          altText
+                          availableForSale
                         }
                       }
                     }
@@ -231,10 +151,17 @@ export function getShopifyClient() {
             tags: node.tags,
             price,
             originalPrice: price,
-            images: node.images.edges.map((edge: any) => edge.node.url),
             imageUrl: node.images.edges[0]?.node.url || '',
             imageAltText: node.images.edges[0]?.node.altText || node.title,
             collection: collectionHandle,
+            variants: node.variants?.edges?.map((edge: any) => ({
+              id: edge.node.id,
+              title: edge.node.title,
+              price: formatPrice(edge.node.priceV2.amount),
+              isAvailable: edge.node.availableForSale
+            })),
+            discountedPrice: null,
+            discountPercentage: null
           };
 
           const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
@@ -248,91 +175,4 @@ export function getShopifyClient() {
       ) || [];
     },
   };
-}
-
-export async function getProductsByCollection(collectionHandle: string): Promise<Product[]> {
-  const response = await shopifyFetch({
-    query: `
-      query GetProductsByCollection($handle: String!) {
-        collection(handle: $handle) {
-          products(first: 250) {
-            edges {
-              node {
-                id
-                handle
-                title
-                description
-                tags
-                vendor
-                priceRange {
-                  minVariantPrice {
-                    amount
-                  }
-                }
-                images(first: 1) {
-                  edges {
-                    node {
-                      url
-                      altText
-                    }
-                  }
-                }
-                variants(first: 100) {
-                  edges {
-                    node {
-                      id
-                      title
-                      price: priceV2 {
-                        amount
-                      }
-                      availableForSale
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `,
-    variables: {
-      handle: collectionHandle,
-    },
-  });
-
-  const discountSettings = await getDiscountSettings();
-
-  return response.body?.data?.collection?.products?.edges?.map(
-    ({ node }: any): Product => {
-      const price = formatPrice(node.priceRange.minVariantPrice.amount);
-      const baseProduct = {
-        id: node.id,
-        handle: node.handle,
-        title: node.title,
-        description: node.description,
-        vendor: node.vendor,
-        tags: node.tags,
-        price,
-        originalPrice: price,
-        images: node.images.edges.map((edge: any) => edge.node.url),
-        imageUrl: node.images.edges[0]?.node.url || '',
-        imageAltText: node.images.edges[0]?.node.altText || node.title,
-        collection: collectionHandle,
-        variants: node.variants?.edges?.map((edge: any) => ({
-          id: edge.node.id,
-          title: edge.node.title,
-          price: formatPrice(edge.node.price.amount),
-          isAvailable: edge.node.availableForSale
-        }))
-      };
-
-      const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
-
-      return {
-        ...baseProduct,
-        discountedPrice,
-        discountPercentage,
-      };
-    }
-  ) || [];
 }

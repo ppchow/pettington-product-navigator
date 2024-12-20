@@ -19,10 +19,9 @@ export interface Product {
   handle: string;
   title: string;
   description: string;
-  images: string[];
-  price: string;
   vendor: string;
   tags: string[];
+  price: string;
   originalPrice: string;
   discountedPrice: string | null;
   discountPercentage: number | null;
