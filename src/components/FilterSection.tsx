@@ -101,9 +101,11 @@ export default function FilterSection({
 }: FilterSectionProps) {
   // Debug logs
   React.useEffect(() => {
-    console.log('Raw collections prop:', collections);
+    console.log('Raw collections prop:', JSON.stringify(collections, null, 2));
     console.log('Collection order:', collectionOrder);
     console.log('Collection titles:', collectionTitles);
+    console.log('Number of collections:', collections.length);
+    console.log('Collection handles:', collections.map(c => c.handle));
   }, [collections]);
 
   // Get the appropriate tags for the current collection

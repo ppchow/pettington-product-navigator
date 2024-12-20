@@ -37,7 +37,8 @@ export default function Home() {
     'prescription-diet-cats-dogs',
     'pet-supplements',
     'stella-chewys',
-    'wellness-1'
+    'wellness-1',
+    'pet-grooming'
   ];
 
   useEffect(() => {
