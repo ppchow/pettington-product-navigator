@@ -13,7 +13,15 @@ export class ShopifyClient {
     this.endpoint = `https://${config.storeDomain}/api/${STOREFRONT_API_VERSION}/graphql.json`;
     this.accessToken = config.storefrontAccessToken;
   }
-
+git add .
+git commit -m "Fix: TypeScript error with Set iteration"
+git push origin maingit add .
+git commit -m "Fix: TypeScript error with Set iteration"
+git push origin maingit add .
+git commit -m "Fix: TypeScript error with Set iteration"
+git push origin maingit add .
+git commit -m "Fix: TypeScript error with Set iteration"
+git push origin main
   private async fetchApi(query: string, variables?: any) {
     try {
       const response = await fetch(this.endpoint, {
