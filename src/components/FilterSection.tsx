@@ -1,5 +1,4 @@
 import React from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface FilterSectionProps {
   availableVendors: string[];
@@ -47,7 +46,7 @@ export default function FilterSection({
             >
               {vendor}
               {selectedVendors.includes(vendor) && (
-                <XMarkIcon className="w-4 h-4" />
+                <span className="ml-1 text-lg leading-none">&times;</span>
               )}
             </button>
           ))}
@@ -74,7 +73,7 @@ export default function FilterSection({
             >
               {tag}
               {selectedTags.includes(tag) && (
-                <XMarkIcon className="w-4 h-4" />
+                <span className="ml-1 text-lg leading-none">&times;</span>
               )}
             </button>
           ))}
