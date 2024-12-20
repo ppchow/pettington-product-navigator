@@ -135,7 +135,8 @@ export function getShopifyClient() {
               currency: edge.node.price.currencyCode,
             }).format(edge.node.price.amount),
             isAvailable: edge.node.availableForSale
-          }))
+          })),
+          isAvailable: node.availableForSale
         })
       );
 

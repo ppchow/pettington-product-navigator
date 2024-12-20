@@ -10,6 +10,13 @@ interface Collection {
   title: string;
 }
 
+interface Variant {
+  id: string;
+  title: string;
+  price: string;
+  isAvailable: boolean;
+}
+
 interface Product {
   id: string;
   title: string;
@@ -21,12 +28,7 @@ interface Product {
   imageUrl: string;
   imageAltText: string;
   collection: string;
-  variants: {
-    id: string;
-    weight: number;
-    price: string;
-    available: boolean;
-  }[];
+  variants: Variant[];
   isAvailable: boolean;
 }
 
@@ -97,7 +99,7 @@ export default function Home() {
           const productsData = await shopify.getProductsByCollection(selectedCollection);
           const productsWithAvailability = productsData.map((product: Product) => ({
             ...product,
-            isAvailable: product.variants.some(variant => variant.available)
+            isAvailable: product.variants.some(variant => variant.isAvailable)
           }));
           setProducts(productsWithAvailability);
           
