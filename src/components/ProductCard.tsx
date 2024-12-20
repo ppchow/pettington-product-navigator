@@ -8,8 +8,6 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  // Get the first variant as default
-  const defaultVariant = product.variants[0];
   const imageUrl = product.images[0]?.url || '';
   const imageAlt = product.images[0]?.altText || product.title;
 
@@ -31,25 +29,27 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.title}
           </h3>
           <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
-          {defaultVariant.sku && (
-            <div className="mt-1 text-sm text-gray-500 flex items-center">
-              <span>SKU: {defaultVariant.sku}</span>
-              <button
-                onClick={() => navigator.clipboard.writeText(defaultVariant.sku)}
-                className="ml-2 text-gray-400 hover:text-gray-600"
-              >
-                📋
-              </button>
-            </div>
-          )}
         </div>
       </div>
       <div className="mt-2">
         {product.variants.map((variant) => (
           <div key={variant.id} className="mb-2">
-            {variant.title !== 'Default Title' && (
-              <p className="text-sm text-gray-500">{variant.title}</p>
-            )}
+            <div className="flex items-center justify-between">
+              {variant.title !== 'Default Title' && (
+                <p className="text-sm text-gray-500">{variant.title}</p>
+              )}
+              {variant.sku && (
+                <div className="text-sm text-gray-500 flex items-center">
+                  <span className="mr-1">SKU: {variant.sku}</span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(variant.sku)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    📋
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center">
               {variant.discountedPrice ? (
                 <>
