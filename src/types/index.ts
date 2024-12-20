@@ -1,3 +1,12 @@
+export interface Collection {
+  id: string;
+  handle: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  hasProducts: boolean;
+}
+
 export interface ProductVariant {
   id: string;
   title: string;
@@ -29,5 +38,5 @@ export interface Product {
   }[];
   variants: ProductVariant[];
   vendor: string;
-  collection?: string;
+  collection?: Collection;
 }

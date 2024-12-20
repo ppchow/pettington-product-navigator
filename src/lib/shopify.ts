@@ -150,6 +150,17 @@ export function getShopifyClient() {
                   id
                   handle
                   title
+                  description
+                  image {
+                    url
+                  }
+                  products(first: 1) {
+                    edges {
+                      node {
+                        id
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -163,8 +174,11 @@ export function getShopifyClient() {
           id: node.id,
           handle: node.handle,
           title: node.title,
+          description: node.description,
+          imageUrl: node.image?.url,
+          hasProducts: node.products.edges.length > 0
         })
-      ) || [];
+      ).filter((collection: any) => collection.hasProducts) || [];
     },
 
     getProductsByCollection: async (collectionHandle: string | null = null): Promise<Product[]> => {
@@ -174,38 +188,40 @@ export function getShopifyClient() {
 
         const response = await shopifyFetch({
           query: `
-            query GetProducts($first: Int!, $query: String) {
-              products(first: $first, query: $query) {
-                edges {
-                  node {
-                    id
-                    title
-                    handle
-                    tags
-                    vendor
-                    images(first: 1) {
-                      edges {
-                        node {
-                          url
-                          altText
+            query GetProducts($first: Int!, $collectionHandle: String) {
+              collection(handle: $collectionHandle) {
+                products(first: $first) {
+                  edges {
+                    node {
+                      id
+                      title
+                      handle
+                      tags
+                      vendor
+                      images(first: 1) {
+                        edges {
+                          node {
+                            url
+                            altText
+                          }
                         }
                       }
-                    }
-                    variants(first: 10) {
-                      edges {
-                        node {
-                          id
-                          title
-                          sku
-                          price {
-                            amount
-                            currencyCode
+                      variants(first: 10) {
+                        edges {
+                          node {
+                            id
+                            title
+                            sku
+                            price {
+                              amount
+                              currencyCode
+                            }
+                            compareAtPrice {
+                              amount
+                              currencyCode
+                            }
+                            availableForSale
                           }
-                          compareAtPrice {
-                            amount
-                            currencyCode
-                          }
-                          availableForSale
                         }
                       }
                     }
@@ -216,16 +232,16 @@ export function getShopifyClient() {
           `,
           variables: {
             first: 250,
-            query: collectionHandle ? `collection_type:${collectionHandle}` : '',
+            collectionHandle: collectionHandle || null,
           },
         });
 
-        if (!response?.body?.data?.products?.edges) {
+        if (!response?.body?.data?.collection?.products?.edges) {
           console.error('No products found in response:', response);
           return [];
         }
 
-        const products = response.body.data.products.edges.map((edge: any) => {
+        const products = response.body.data.collection.products.edges.map((edge: any) => {
           const node = edge.node;
           const variants = node.variants.edges.map((variantEdge: any) => {
             const variant = variantEdge.node;
