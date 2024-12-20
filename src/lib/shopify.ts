@@ -23,9 +23,6 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
     const response = await result.json();
     
-    // Debug logs
-    console.log('Shopify API Response:', JSON.stringify(response, null, 2));
-    
     if (response.errors) {
       console.error('Shopify API Errors:', response.errors);
       throw new Error(response.errors[0].message);
@@ -46,94 +43,48 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
-    // Try to get the specific metaobject by reference
     const response = await shopifyFetch({
       query: `
-        query {
-          metaobject(id: "gid://shopify/Metaobject/81585340616") {
-            id
-            handle
-            type
+        query GetDiscountSettings {
+          metaobject(handle: { handle: "discount_settings", type: "event_discount_settings" }) {
             fields {
               key
               value
-            }
-          }
-          metaobjects(type: "event_discount_settings", first: 1) {
-            edges {
-              node {
-                id
-                handle
-                type
-                fields {
-                  key
-                  value
-                }
-              }
             }
           }
         }
       `,
     });
 
-    console.log('Full API response:', {
-      status: response.status,
-      body: response.body,
-      error: response.error,
-      data: response.body?.data,
-      hasMetaobject: !!response.body?.data?.metaobject,
-      hasMetaobjects: !!response.body?.data?.metaobjects?.edges?.length
-    });
-
-    // Try to get metaobject from either query
-    const metaobject = response.body?.data?.metaobject || 
-                      response.body?.data?.metaobjects?.edges?.[0]?.node;
-
-    if (metaobject?.fields) {
-      const fields = metaobject.fields;
-      const settings = fields.reduce((acc: any, field: MetaobjectField) => {
-        acc[field.key] = field.value;
-        return acc;
-      }, {});
-
-      console.log('Raw settings:', settings);
-
-      const parsedSettings = {
-        prescription_enabled: settings.prescription_enabled === 'true',
-        prescription_percentage: parseFloat(settings.prescription_percentage || '0'),
-        parasite_enabled: settings.parasite_enabled === 'true',
-        parasite_percentage: parseFloat(settings.parasite_percentage || '0'),
-        default_enabled: settings.default_enabled === 'true',
-        default_percentage: parseFloat(settings.default_percentage || '0'),
+    if (!response.body?.data?.metaobject?.fields) {
+      return {
+        prescription_enabled: false,
+        prescription_percentage: 0,
+        parasite_enabled: false,
+        parasite_percentage: 0,
+        default_enabled: false,
+        default_percentage: 0,
       };
-
-      console.log('Parsed discount settings:', parsedSettings);
-      return parsedSettings;
     }
 
-    // If we can't find the metaobject, return default settings
-    console.warn('Could not access metaobject data. Using default settings. Please check:');
-    console.warn('1. Storefront API token has unauthenticated_read_metaobjects scope');
-    console.warn('2. Metaobject type is exactly "event_discount_settings"');
-    console.warn('3. Metaobject is published and accessible');
-    
+    const fields = response.body.data.metaobject.fields as MetaobjectField[];
     return {
-      prescription_enabled: true,
-      prescription_percentage: 10,
-      parasite_enabled: true,
-      parasite_percentage: 10,
-      default_enabled: true,
-      default_percentage: 5,
+      prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
+      prescription_percentage: Number(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
+      parasite_enabled: fields.find(f => f.key === 'parasite_enabled')?.value === 'true',
+      parasite_percentage: Number(fields.find(f => f.key === 'parasite_percentage')?.value || '0'),
+      default_enabled: fields.find(f => f.key === 'default_enabled')?.value === 'true',
+      default_percentage: Number(fields.find(f => f.key === 'default_percentage')?.value || '0'),
     };
   } catch (error) {
     console.error('Error fetching discount settings:', error);
     return {
-      prescription_enabled: true,
-      prescription_percentage: 10,
-      parasite_enabled: true,
-      parasite_percentage: 10,
-      default_enabled: true,
-      default_percentage: 5,
+      prescription_enabled: false,
+      prescription_percentage: 0,
+      parasite_enabled: false,
+      parasite_percentage: 0,
+      default_enabled: false,
+      default_percentage: 0,
     };
   }
 }
@@ -168,7 +119,6 @@ export function getShopifyClient() {
         `,
       });
 
-      console.log('Collections response:', response);
       return response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
           id: node.id,
@@ -184,7 +134,6 @@ export function getShopifyClient() {
     getProductsByCollection: async (collectionHandle: string | null = null): Promise<Product[]> => {
       try {
         const discountSettings = await getDiscountSettings();
-        console.log('Fetched discount settings:', discountSettings);
 
         const response = await shopifyFetch({
           query: `
@@ -237,7 +186,6 @@ export function getShopifyClient() {
         });
 
         if (!response?.body?.data?.collection?.products?.edges) {
-          console.error('No products found in response:', response);
           return [];
         }
 
@@ -286,18 +234,6 @@ export function getShopifyClient() {
             variants
           };
         });
-
-        console.log('Processed products:', products.map((p: Product) => ({
-          title: p.title,
-          tags: p.tags,
-          variants: p.variants.map((v: ProductVariant) => ({
-            title: v.title,
-            price: v.price,
-            discountedPrice: v.discountedPrice,
-            discountPercentage: v.discountPercentage,
-            availableForSale: v.availableForSale
-          }))
-        })));
 
         return products;
       } catch (error) {

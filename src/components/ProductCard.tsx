@@ -41,10 +41,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               {variant.sku && (
                 <button
                   onClick={() => navigator.clipboard.writeText(variant.sku)}
-                  className="text-sm text-gray-500 flex items-center hover:text-gray-700 transition-colors"
+                  className="text-sm text-blue-600 flex items-center hover:text-blue-700 transition-colors cursor-pointer"
                 >
                   <span className="mr-1">SKU: {variant.sku}</span>
-                  <span className="text-gray-400 hover:text-gray-600">📋</span>
+                  <span className="text-blue-500 hover:text-blue-600">📋</span>
                 </button>
               )}
             </div>
