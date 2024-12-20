@@ -2,7 +2,7 @@ import Layout from '@/components/Layout';
 
 export default function Offline() {
   return (
-    <Layout title="Offline">
+    <Layout>
       <div className="min-h-[50vh] flex flex-col items-center justify-center text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
           You are currently offline
@@ -12,9 +12,9 @@ export default function Offline() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
         >
-          Try Again
+          Retry Connection
         </button>
       </div>
     </Layout>
