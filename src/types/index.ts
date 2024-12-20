@@ -2,7 +2,6 @@ export interface Variant {
   id: string;
   title: string;
   price: string;
-  sku: string;
   isAvailable: boolean;
 }
 
@@ -31,5 +30,4 @@ export interface Product {
   imageAltText: string;
   collection: string;
   variants?: Variant[];
-  isAvailable: boolean;
 }

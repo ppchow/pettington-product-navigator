@@ -50,7 +50,7 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         
-        {product.variants?.length > 0 && (
+        {product.variants && product.variants.length > 0 && (
           <div className="text-xs space-y-1 mt-4">
             {product.variants.map((variant) => (
               <div key={variant.id} className="flex flex-col space-y-1">
