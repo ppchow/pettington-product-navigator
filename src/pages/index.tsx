@@ -158,7 +158,6 @@ export default function Home() {
   const handleCollectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newCollection = event.target.value;
     setSelectedCollection(newCollection);
-    // Reset all filters when collection changes
     setSelectedVendors([]);
     setSelectedTags([]);
     setSelectedPetTypes([]);
@@ -221,6 +220,7 @@ export default function Home() {
             selectedPetTypes={selectedPetTypes}
             onPetTypeSelect={handlePetTypeChange}
             showVendorFilter={showVendorFilter}
+            currentCollection={selectedCollection}
           />
         </div>
 

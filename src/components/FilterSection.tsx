@@ -1,11 +1,36 @@
 import React from 'react';
 
-const predefinedTags = [
-  '腸胃處方糧',
-  '泌尿道處方糧',
-  '腎臟處方糧',
-  '低敏處方糧'
-];
+const collectionTags = {
+  'stella-chewys': [
+    'Dry Food 乾糧',
+    'Wet Food 濕糧',
+    '乾糧伴侶',
+    '凍乾外層乾糧',
+    '凍乾脫水肉餅',
+    '凍乾脫水貓糧',
+    '烘焙乾糧混合凍乾生肉粒',
+    '魔幻肉塵'
+  ],
+  'wellness-1': [
+    'Puppy 幼犬',
+    'Kitten 幼貓',
+    'Senior 老年',
+    '室內',
+    '泌尿道',
+    '消化健康',
+    '牙齒保健',
+    '皮毛和皮膚',
+    '腸胃敏感',
+    '關節護理',
+    '體重控制'
+  ],
+  'default': [
+    '腸胃處方糧',
+    '泌尿道處方糧',
+    '腎臟處方糧',
+    '低敏處方糧'
+  ]
+};
 
 const petTypes = ['Dog 狗', 'Cat 貓'];
 
@@ -18,6 +43,7 @@ interface FilterSectionProps {
   selectedPetTypes: string[];
   onPetTypeSelect: (type: string) => void;
   showVendorFilter?: boolean;
+  currentCollection: string;
 }
 
 export default function FilterSection({
@@ -29,7 +55,11 @@ export default function FilterSection({
   selectedPetTypes,
   onPetTypeSelect,
   showVendorFilter = true,
+  currentCollection,
 }: FilterSectionProps) {
+  // Get the appropriate tags for the current collection
+  const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
+
   return (
     <div className="space-y-6">
       <div>
@@ -91,7 +121,7 @@ export default function FilterSection({
       <div>
         <h3 className="text-lg font-semibold mb-3">Product Type</h3>
         <div className="flex flex-wrap gap-2">
-          {predefinedTags.map((tag) => (
+          {availableTags.map((tag) => (
             <button
               key={tag}
               onClick={() => onTagSelect(tag)}
