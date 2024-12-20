@@ -166,10 +166,20 @@ export default function Home() {
     );
   };
 
+  // Handle collection change
+  const handleCollectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCollection = event.target.value;
+    setSelectedCollection(newCollection);
+    // Reset all filters when collection changes
+    setSelectedVendors([]);
+    setSelectedTags([]);
+    setSelectedPetTypes([]);
+  };
+
   const predefinedTags = ['tag1', 'tag2', 'tag3'];
 
   // Determine if vendor filter should be shown
-  const showVendorFilter = !['Stella & Chewy', 'Wellness'].includes(selectedCollection);
+  const showVendorFilter = !['stella-chewys', 'wellness-1'].includes(selectedCollection);
 
   return (
     <Layout>
@@ -203,9 +213,9 @@ export default function Home() {
 
         <div className="flex flex-col space-y-4">
           <select
-            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             value={selectedCollection}
-            onChange={(e) => setSelectedCollection(e.target.value)}
+            onChange={handleCollectionChange}
+            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {collections.map((collection) => (
               <option key={collection.handle} value={collection.handle}>
