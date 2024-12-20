@@ -1,24 +1,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Variant } from '@/types';
+import { Variant, Product } from '@/types';
 
 interface ProductCardProps {
-  title: string;
-  imageUrl: string;
-  imageAltText: string;
-  price: string;
-  variants: Variant[];
-  isAvailable: boolean;
+  product: Product;
 }
 
-export default function ProductCard({
-  title,
-  imageUrl,
-  imageAltText,
-  price,
-  variants,
-  isAvailable,
-}: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
 
   const handleCopySku = async (sku: string) => {
@@ -32,34 +20,39 @@ export default function ProductCard({
   };
 
   return (
-    <div className="relative bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-      <div className="aspect-square relative overflow-hidden">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt={imageAltText}
-            fill
-            className="object-cover hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No image</span>
-          </div>
-        )}
-        {!isAvailable && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-            Not available
-          </div>
-        )}
+    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="relative aspect-square">
+        <Image
+          src={product.imageUrl}
+          alt={product.imageAltText}
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover rounded-t-lg"
+        />
       </div>
-      
-      <div className="p-3 space-y-2">
-        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+      <div className="p-4">
+        <h3 className="text-sm font-medium text-gray-900 truncate">{product.title}</h3>
+        <p className="text-sm text-gray-500 truncate">{product.vendor}</p>
         
-        {variants.length > 0 && (
-          <div className="text-xs space-y-1">
-            {variants.map((variant) => (
+        <div className="mt-2">
+          {product.discountedPrice ? (
+            <div className="flex flex-col">
+              <span className="text-gray-500 line-through text-sm">{product.originalPrice}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-red-600">{product.discountedPrice}</span>
+                <span className="text-sm bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
+                  -{product.discountPercentage}%
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-lg font-bold">{product.originalPrice}</span>
+          )}
+        </div>
+        
+        {product.variants.length > 0 && (
+          <div className="text-xs space-y-1 mt-4">
+            {product.variants.map((variant) => (
               <div key={variant.id} className="flex flex-col space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">{variant.title}</span>

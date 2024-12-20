@@ -1,4 +1,5 @@
-import { Product } from '@/types';
+import { Product, DiscountSettings } from '@/types';
+import { calculateDiscount, formatPrice } from './utils';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
 const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
@@ -27,6 +28,31 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
       error: 'Error receiving data',
     };
   }
+}
+
+async function getDiscountSettings(): Promise<DiscountSettings> {
+  const response = await shopifyFetch({
+    query: `
+      query GetDiscountSettings {
+        metaobject(handle: "event_discount_settings") {
+          fields {
+            key
+            value
+          }
+        }
+      }
+    `,
+  });
+  
+  const fields = response.body.data.metaobject.fields;
+  return {
+    prescription_enabled: fields.find(f => f.key === 'prescription_enabled').value === 'true',
+    prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage').value),
+    parasite_enabled: fields.find(f => f.key === 'parasite_enabled').value === 'true',
+    parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage').value),
+    default_enabled: fields.find(f => f.key === 'default_enabled').value === 'true',
+    default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage').value),
+  };
 }
 
 export function getShopifyClient() {
@@ -148,6 +174,75 @@ export function getShopifyClient() {
       );
 
       return products || [];
+    },
+
+    getProductsByCollectionWithDiscounts: async (collectionHandle: string) => {
+      const response = await shopifyFetch({
+        query: `
+          query GetProductsByCollection($handle: String!) {
+            collection(handle: $handle) {
+              products(first: 250) {
+                edges {
+                  node {
+                    id
+                    handle
+                    title
+                    description
+                    tags
+                    vendor
+                    priceRange {
+                      minVariantPrice {
+                        amount
+                      }
+                    }
+                    images(first: 1) {
+                      edges {
+                        node {
+                          url
+                          altText
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          handle: collectionHandle,
+        },
+      });
+
+      const discountSettings = await getDiscountSettings();
+
+      return response.body?.data?.collection?.products?.edges?.map(
+        ({ node }: any): Product => {
+          const price = formatPrice(node.priceRange.minVariantPrice.amount);
+          const baseProduct = {
+            id: node.id,
+            handle: node.handle,
+            title: node.title,
+            description: node.description,
+            vendor: node.vendor,
+            tags: node.tags,
+            price,
+            originalPrice: price,
+            images: node.images.edges.map((edge: any) => edge.node.url),
+            imageUrl: node.images.edges[0]?.node.url || '',
+            imageAltText: node.images.edges[0]?.node.altText || node.title,
+            collection: collectionHandle,
+          };
+
+          const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
+
+          return {
+            ...baseProduct,
+            discountedPrice,
+            discountPercentage,
+          };
+        }
+      ) || [];
     },
   };
 }

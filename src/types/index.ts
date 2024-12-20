@@ -6,14 +6,27 @@ export interface Variant {
   isAvailable: boolean;
 }
 
+export interface DiscountSettings {
+  prescription_enabled: boolean;
+  prescription_percentage: number;
+  parasite_enabled: boolean;
+  parasite_percentage: number;
+  default_enabled: boolean;
+  default_percentage: number;
+}
+
 export interface Product {
   id: string;
-  title: string;
   handle: string;
+  title: string;
   description: string;
+  images: string[];
+  price: string;
   vendor: string;
   tags: string[];
-  price: string;
+  originalPrice: string;
+  discountedPrice: string | null;
+  discountPercentage: number | null;
   imageUrl: string;
   imageAltText: string;
   collection: string;
