@@ -154,10 +154,8 @@ export default function Home() {
     );
   };
 
-  // Handle collection change
-  const handleCollectionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCollection = event.target.value;
-    setSelectedCollection(newCollection);
+  const handleCollectionSelect = (collection: string) => {
+    setSelectedCollection(collection);
     setSelectedVendors([]);
     setSelectedTags([]);
     setSelectedPetTypes([]);
@@ -170,84 +168,78 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {!isOnline && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  You are currently offline. Showing cached products.
-                </p>
-              </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-1">
+            <FilterSection
+              availableVendors={availableVendors}
+              selectedVendors={selectedVendors}
+              onVendorSelect={handleVendorChange}
+              selectedTags={selectedTags}
+              onTagSelect={handleTagChange}
+              selectedPetTypes={selectedPetTypes}
+              onPetTypeSelect={handlePetTypeChange}
+              showVendorFilter={showVendorFilter}
+              currentCollection={selectedCollection}
+              collections={collections}
+              onCollectionSelect={handleCollectionSelect}
+            />
+          </div>
+
+          <div className="lg:col-span-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {!isOnline && (
+                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-yellow-700">
+                        You are currently offline. Showing cached products.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-sm text-gray-600">
+                    Showing {filteredProducts.length} products
+                  </div>
+                  {filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      title={product.title}
+                      imageUrl={product.imageUrl}
+                      imageAltText={product.imageAltText}
+                      price={product.price}
+                      variants={product.variants}
+                      isAvailable={product.isAvailable}
+                    />
+                  ))}
+                </>
+              )}
             </div>
           </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4">
-            <div className="flex">
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col space-y-4">
-          <select
-            value={selectedCollection}
-            onChange={handleCollectionChange}
-            className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {collections.map((collection) => (
-              <option key={collection.handle} value={collection.handle}>
-                {collection.title}
-              </option>
-            ))}
-          </select>
-
-          <FilterSection
-            availableVendors={availableVendors}
-            selectedVendors={selectedVendors}
-            onVendorSelect={handleVendorChange}
-            selectedTags={selectedTags}
-            onTagSelect={handleTagChange}
-            selectedPetTypes={selectedPetTypes}
-            onPetTypeSelect={handlePetTypeChange}
-            showVendorFilter={showVendorFilter}
-            currentCollection={selectedCollection}
-          />
         </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
-          <>
-            <div className="text-sm text-gray-600">
-              Showing {filteredProducts.length} products
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  title={product.title}
-                  imageUrl={product.imageUrl}
-                  imageAltText={product.imageAltText}
-                  price={product.price}
-                  variants={product.variants}
-                  isAvailable={product.isAvailable}
-                />
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </Layout>
   );

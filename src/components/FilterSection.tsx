@@ -12,6 +12,8 @@ const collectionTags = {
     '魔幻肉塵'
   ],
   'wellness-1': [
+    'Dry Food 乾糧',
+    'Wet Food 濕糧',
     'Puppy 幼犬',
     'Kitten 幼貓',
     'Senior 老年',
@@ -44,6 +46,8 @@ interface FilterSectionProps {
   onPetTypeSelect: (type: string) => void;
   showVendorFilter?: boolean;
   currentCollection: string;
+  collections: { handle: string; title: string }[];
+  onCollectionSelect: (collection: string) => void;
 }
 
 export default function FilterSection({
@@ -56,12 +60,41 @@ export default function FilterSection({
   onPetTypeSelect,
   showVendorFilter = true,
   currentCollection,
+  collections,
+  onCollectionSelect,
 }: FilterSectionProps) {
   // Get the appropriate tags for the current collection
   const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
 
   return (
     <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Collections</h3>
+        <div className="flex flex-wrap gap-2">
+          {collections.map((collection) => (
+            <button
+              key={collection.handle}
+              onClick={() => onCollectionSelect(collection.handle)}
+              className={`
+                px-3 py-1.5 rounded-full text-sm font-medium
+                transition-all duration-200 ease-in-out
+                flex items-center gap-1
+                ${
+                  currentCollection === collection.handle
+                    ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                }
+              `}
+            >
+              {collection.title}
+              {currentCollection === collection.handle && (
+                <span className="ml-1 text-lg leading-none">&times;</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div>
         <h3 className="text-lg font-semibold mb-3">Pet Type</h3>
         <div className="flex flex-wrap gap-2">
