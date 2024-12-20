@@ -2,7 +2,7 @@ const STOREFRONT_API_VERSION = '2024-01';
 
 interface ShopifyConfig {
   storeDomain: string;
-  storefrontAccessToken: string;
+  storefrontAccessToken: string; 
 }
 
 export class ShopifyClient {
@@ -14,7 +14,7 @@ export class ShopifyClient {
     this.accessToken = config.storefrontAccessToken;
   }
 
-  private async fetchApi(query: string) {
+  private async fetchApi(query: string, variables?: any) {
     try {
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -22,7 +22,7 @@ export class ShopifyClient {
           'Content-Type': 'application/json',
           'X-Shopify-Storefront-Access-Token': this.accessToken,
         },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, variables }),
       });
 
       if (!response.ok) {
@@ -121,31 +121,37 @@ export class ShopifyClient {
 
   async getProductsByCollection(collectionHandle: string) {
     const query = `
-      {
-        collection(handle: "${collectionHandle}") {
+      query GetProductsByCollection($handle: String!) {
+        collection(handle: $handle) {
           products(first: 250) {
             edges {
               node {
                 id
                 title
-                vendor
+                handle
+                description
                 tags
-                productType
-                featuredImage {
-                  url
-                  altText
+                vendor
+                priceRange {
+                  minVariantPrice {
+                    amount
+                    currencyCode
+                  }
                 }
-                variants(first: 10) {
+                images(first: 1) {
                   edges {
                     node {
-                      id
-                      title
-                      availableForSale
-                      weight
-                      price {
-                        amount
-                        currencyCode
-                      }
+                      url
+                      altText
+                    }
+                  }
+                }
+                variants(first: 1) {
+                  edges {
+                    node {
+                    price {
+                      amount
+                      currencyCode
                     }
                   }
                 }
@@ -157,7 +163,7 @@ export class ShopifyClient {
     `;
 
     try {
-      const response = await this.fetchApi(query);
+      const response = await this.fetchApi(query, { handle: collectionHandle });
       console.log('Collection products response:', response);
 
       if (!response.data?.collection?.products?.edges) {
@@ -165,7 +171,20 @@ export class ShopifyClient {
         return [];
       }
 
-      return this.transformProducts(response.data.collection.products.edges);
+      return response.data.collection.products.edges.map((edge: any) => ({
+        id: edge.node.id,
+        title: edge.node.title,
+        handle: edge.node.handle,
+        description: edge.node.description,
+        vendor: edge.node.vendor,
+        tags: edge.node.tags,
+        price: new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: edge.node.priceRange.minVariantPrice.currencyCode,
+        }).format(edge.node.priceRange.minVariantPrice.amount),
+        imageUrl: edge.node.images.edges[0]?.node.url || '',
+        imageAltText: edge.node.images.edges[0]?.node.altText || edge.node.title,
+      }));
     } catch (error) {
       console.error('Error fetching collection products:', error);
       throw error;

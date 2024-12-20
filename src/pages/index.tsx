@@ -2,19 +2,37 @@ import { useEffect, useState } from 'react';
 import { getShopifyClient } from '@/lib/shopify';
 import ProductGrid from '@/components/ProductGrid';
 import Layout from '@/components/Layout';
+import FilterSection from '@/components/FilterSection';
 
 interface Collection {
   handle: string;
   title: string;
 }
 
+interface Product {
+  id: string;
+  title: string;
+  handle: string;
+  description: string;
+  imageUrl: string;
+  price: string;
+  vendor: string;
+  tags: string[];
+}
+
 export default function Home() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>('prescription-diet-cats-dogs');
   const [isLoading, setIsLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter states
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableVendors, setAvailableVendors] = useState<string[]>([]);
 
   // List of allowed collections
   const allowedCollections = [
@@ -38,16 +56,15 @@ export default function Home() {
     };
   }, []);
 
+  // Load collections
   useEffect(() => {
     async function loadCollections() {
       try {
         const shopify = getShopifyClient();
         const collectionsData = await shopify.getCollections();
-        // Filter collections to only include allowed ones
         const filteredCollections = collectionsData.filter((collection: Collection) =>
           allowedCollections.includes(collection.handle)
         );
-        console.log('Filtered collections:', filteredCollections);
         setCollections(filteredCollections);
       } catch (error) {
         console.error('Error loading collections:', error);
@@ -58,16 +75,22 @@ export default function Home() {
     loadCollections();
   }, []);
 
+  // Load products
   useEffect(() => {
     async function loadProducts() {
       setIsLoading(true);
       setError(null);
       try {
         const shopify = getShopifyClient();
-        console.log('Loading products for collection:', selectedCollection);
         const productsData = await shopify.getProductsByCollection(selectedCollection);
-        console.log('Products loaded:', productsData);
         setProducts(productsData);
+        
+        // Extract unique vendors
+        const vendors = [...new Set(productsData.map(product => product.vendor))];
+        setAvailableVendors(vendors);
+        
+        // Initialize filtered products
+        setFilteredProducts(productsData);
       } catch (error) {
         console.error('Error loading products:', error);
         setError('Failed to load products');
@@ -81,12 +104,32 @@ export default function Home() {
     }
   }, [selectedCollection]);
 
-  // Sort products by weight
-  const sortedProducts = [...products].sort((a, b) => {
-    const aWeight = Math.min(...(a.variants?.map((v: any) => v.weight) || [0]));
-    const bWeight = Math.min(...(b.variants?.map((v: any) => v.weight) || [0]));
-    return aWeight - bWeight;
-  });
+  // Apply filters
+  useEffect(() => {
+    const filtered = products.filter(product => {
+      const vendorMatch = selectedVendors.length === 0 || selectedVendors.includes(product.vendor);
+      const tagMatch = selectedTags.length === 0 || selectedTags.some(tag => product.tags.includes(tag));
+      return vendorMatch && tagMatch;
+    });
+    setFilteredProducts(filtered);
+  }, [products, selectedVendors, selectedTags]);
+
+  // Handle filter changes
+  const handleVendorChange = (vendor: string) => {
+    setSelectedVendors(prev =>
+      prev.includes(vendor)
+        ? prev.filter(v => v !== vendor)
+        : [...prev, vendor]
+    );
+  };
+
+  const handleTagChange = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag)
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
 
   return (
     <Layout>
@@ -118,7 +161,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col space-y-4">
           <select
             className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             value={selectedCollection}
@@ -130,6 +173,14 @@ export default function Home() {
               </option>
             ))}
           </select>
+
+          <FilterSection
+            vendors={availableVendors}
+            selectedVendors={selectedVendors}
+            onVendorChange={handleVendorChange}
+            selectedTags={selectedTags}
+            onTagChange={handleTagChange}
+          />
         </div>
 
         {isLoading ? (
@@ -137,7 +188,12 @@ export default function Home() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <ProductGrid products={sortedProducts} />
+          <>
+            <div className="text-sm text-gray-600">
+              Showing {filteredProducts.length} products
+            </div>
+            <ProductGrid products={filteredProducts} />
+          </>
         )}
       </div>
     </Layout>
