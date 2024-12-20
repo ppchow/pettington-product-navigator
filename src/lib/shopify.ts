@@ -92,6 +92,7 @@ export function getShopifyClient() {
                         node {
                           id
                           title
+                          sku
                           availableForSale
                           price {
                             amount
@@ -129,6 +130,7 @@ export function getShopifyClient() {
           variants: node.variants.edges.map((edge: any) => ({
             id: edge.node.id,
             title: edge.node.title || '',
+            sku: edge.node.sku || '',
             price: new Intl.NumberFormat('en-US', {
               style: 'currency',
               currency: edge.node.price.currencyCode,
