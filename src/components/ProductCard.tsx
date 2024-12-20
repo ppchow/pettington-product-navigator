@@ -53,12 +53,15 @@ export default function ProductCard({ product }: { product: Product }) {
               <div key={variant.id} className="flex flex-col space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">{variant.title}</span>
-                  <button
-                    onClick={() => handleCopySku(variant.sku)}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    {copiedSku === variant.sku ? 'Copied!' : 'Copy SKU'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-500">{variant.sku}</span>
+                    <button
+                      onClick={() => handleCopySku(variant.sku)}
+                      className="text-blue-600 hover:text-blue-800 ml-2"
+                    >
+                      {copiedSku === variant.sku ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className={variant.isAvailable ? 'text-green-600' : 'text-red-600'}>

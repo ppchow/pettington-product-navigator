@@ -12,7 +12,7 @@ export function calculateDiscount(product: Product, settings: DiscountSettings):
   discountedPrice: string | null;
   discountPercentage: number | null;
 } {
-  console.log('Calculating discount for product:', {
+  console.log('Calculating discount for:', {
     title: product.title,
     tags: product.tags,
     settings

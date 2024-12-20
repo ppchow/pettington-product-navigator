@@ -49,9 +49,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     const response = await shopifyFetch({
       query: `
         {
-          metaobject(handle: "event-discount-settings-8rafyxmo") {
-            handle
-            type
+          metaobject(handle: "event_discount_settings") {
             fields {
               key
               value
@@ -68,20 +66,22 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       throw new Error('Discount settings not found');
     }
 
-    const fields = response.body.data.metaobject.fields as MetaobjectField[];
-    console.log('Metaobject fields:', fields);
+    const fields = response.body.data.metaobject.fields;
+    const settings = fields.reduce((acc: any, field: MetaobjectField) => {
+      acc[field.key] = field.value;
+      return acc;
+    }, {});
 
-    const settings = {
-      prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
-      prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
-      parasite_enabled: fields.find(f => f.key === 'parasite_enabled')?.value === 'true',
-      parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage')?.value || '0'),
-      default_enabled: fields.find(f => f.key === 'default_enabled')?.value === 'true',
-      default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage')?.value || '0'),
+    console.log('Raw settings:', settings);
+
+    return {
+      prescription_enabled: settings.prescription_enabled === 'true',
+      prescription_percentage: parseFloat(settings.prescription_percentage || '0'),
+      parasite_enabled: settings.parasite_enabled === 'true',
+      parasite_percentage: parseFloat(settings.parasite_percentage || '0'),
+      default_enabled: settings.default_enabled === 'true',
+      default_percentage: parseFloat(settings.default_percentage || '0'),
     };
-
-    console.log('Parsed discount settings:', settings);
-    return settings;
   } catch (error) {
     console.error('Error fetching discount settings:', error);
     return {
