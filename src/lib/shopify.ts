@@ -72,6 +72,7 @@ export function getShopifyClient() {
                     description
                     tags
                     vendor
+                    availableForSale
                     priceRange {
                       minVariantPrice {
                         amount
@@ -90,6 +91,8 @@ export function getShopifyClient() {
                       edges {
                         node {
                           id
+                          title
+                          availableForSale
                           price {
                             amount
                             currencyCode
@@ -116,6 +119,7 @@ export function getShopifyClient() {
           description: node.description,
           vendor: node.vendor,
           tags: node.tags,
+          isAvailable: node.availableForSale,
           price: new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: node.priceRange.minVariantPrice.currencyCode,
@@ -125,9 +129,9 @@ export function getShopifyClient() {
           collection: response.body?.data?.collection?.handle || collectionHandle,
           variants: node.variants.edges.map((edge: any) => ({
             id: edge.node.id,
+            title: edge.node.title,
             price: `${edge.node.price.amount} ${edge.node.price.currencyCode}`,
-            weight: 0,
-            available: true
+            isAvailable: edge.node.availableForSale
           }))
         })
       );

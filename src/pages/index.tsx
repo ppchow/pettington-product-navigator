@@ -3,6 +3,7 @@ import { getShopifyClient } from '@/lib/shopify';
 import ProductGrid from '@/components/ProductGrid';
 import Layout from '@/components/Layout';
 import FilterSection from '@/components/FilterSection';
+import ProductCard from '../components/ProductCard';
 
 interface Collection {
   handle: string;
@@ -245,7 +246,19 @@ export default function Home() {
             <div className="text-sm text-gray-600">
               Showing {filteredProducts.length} products
             </div>
-            <ProductGrid products={filteredProducts} />
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  title={product.title}
+                  imageUrl={product.imageUrl}
+                  imageAltText={product.imageAltText}
+                  price={product.price}
+                  variants={product.variants}
+                  isAvailable={product.variants.some(variant => variant.available)}
+                />
+              ))}
+            </div>
           </>
         )}
       </div>
