@@ -1,14 +1,5 @@
 import React from 'react';
 
-interface FilterSectionProps {
-  availableVendors: string[];
-  selectedVendors: string[];
-  onVendorSelect: (vendor: string) => void;
-  availableTags: string[];
-  selectedTags: string[];
-  onTagSelect: (tag: string) => void;
-}
-
 const predefinedTags = [
   '腸胃處方糧',
   '泌尿道處方糧',
@@ -16,11 +7,18 @@ const predefinedTags = [
   '低敏處方糧'
 ];
 
+interface FilterSectionProps {
+  availableVendors: string[];
+  selectedVendors: string[];
+  onVendorSelect: (vendor: string) => void;
+  selectedTags: string[];
+  onTagSelect: (tag: string) => void;
+}
+
 export default function FilterSection({
   availableVendors,
   selectedVendors,
   onVendorSelect,
-  availableTags = predefinedTags,
   selectedTags,
   onTagSelect,
 }: FilterSectionProps) {
@@ -56,7 +54,7 @@ export default function FilterSection({
       <div>
         <h3 className="text-lg font-semibold mb-3">Product Type</h3>
         <div className="flex flex-wrap gap-2">
-          {availableTags.map((tag) => (
+          {predefinedTags.map((tag) => (
             <button
               key={tag}
               onClick={() => onTagSelect(tag)}

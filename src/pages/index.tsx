@@ -188,7 +188,6 @@ export default function Home() {
             availableVendors={availableVendors}
             selectedVendors={selectedVendors}
             onVendorSelect={handleVendorChange}
-            availableTags={predefinedTags}
             selectedTags={selectedTags}
             onTagSelect={handleTagChange}
           />
