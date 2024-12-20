@@ -30,6 +30,6 @@ export interface Product {
   imageUrl: string;
   imageAltText: string;
   collection: string;
-  variants: Variant[];
+  variants?: Variant[];
   isAvailable: boolean;
 }

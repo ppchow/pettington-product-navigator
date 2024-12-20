@@ -6,6 +6,11 @@ const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_
 
 const endpoint = `https://${domain}/api/2024-01/graphql.json`;
 
+interface MetaobjectField {
+  key: string;
+  value: string;
+}
+
 async function shopifyFetch({ query, variables }: { query: string; variables?: any }) {
   try {
     const result = await fetch(endpoint, {
@@ -44,14 +49,14 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     `,
   });
   
-  const fields = response.body.data.metaobject.fields;
+  const fields = response.body.data.metaobject.fields as MetaobjectField[];
   return {
-    prescription_enabled: fields.find(f => f.key === 'prescription_enabled').value === 'true',
-    prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage').value),
-    parasite_enabled: fields.find(f => f.key === 'parasite_enabled').value === 'true',
-    parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage').value),
-    default_enabled: fields.find(f => f.key === 'default_enabled').value === 'true',
-    default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage').value),
+    prescription_enabled: fields.find((f: MetaobjectField) => f.key === 'prescription_enabled')?.value === 'true',
+    prescription_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'prescription_percentage')?.value || '0'),
+    parasite_enabled: fields.find((f: MetaobjectField) => f.key === 'parasite_enabled')?.value === 'true',
+    parasite_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'parasite_percentage')?.value || '0'),
+    default_enabled: fields.find((f: MetaobjectField) => f.key === 'default_enabled')?.value === 'true',
+    default_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'default_percentage')?.value || '0'),
   };
 }
 
