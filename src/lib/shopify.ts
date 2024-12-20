@@ -1,5 +1,5 @@
 import { Product, ProductVariant, DiscountSettings } from '@/types';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, calculateVariantDiscount } from '@/lib/utils';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
 const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
@@ -232,22 +232,17 @@ export function getShopifyClient() {
             const price = variant.price.amount;
             const compareAtPrice = variant.compareAtPrice?.amount;
 
-            // Calculate discount based on tags
-            let discountPercentage: number | null = null;
-            let discountedPrice: string | null = null;
-
-            if (node.tags.some((tag: string) => tag.includes('處方糧')) && discountSettings.prescription_enabled) {
-              discountPercentage = discountSettings.prescription_percentage;
-            } else if (node.tags.some((tag: string) => tag.includes('驅蟲除蚤產品')) && discountSettings.parasite_enabled) {
-              discountPercentage = discountSettings.parasite_percentage;
-            } else if (discountSettings.default_enabled) {
-              discountPercentage = discountSettings.default_percentage;
-            }
-
-            if (discountPercentage) {
-              const originalPrice = parseFloat(price);
-              discountedPrice = (originalPrice * (1 - discountPercentage / 100)).toString();
-            }
+            const { discountedPrice, discountPercentage } = calculateVariantDiscount(
+              {
+                id: variant.id,
+                title: variant.title,
+                sku: variant.sku || '',
+                price,
+                availableForSale: variant.availableForSale
+              },
+              node.tags,
+              discountSettings
+            );
 
             return {
               id: variant.id,
@@ -256,7 +251,7 @@ export function getShopifyClient() {
               price: formatPrice(price),
               compareAtPrice: compareAtPrice ? formatPrice(compareAtPrice) : null,
               availableForSale: variant.availableForSale,
-              discountedPrice: discountedPrice ? formatPrice(discountedPrice) : null,
+              discountedPrice,
               discountPercentage
             };
           });
