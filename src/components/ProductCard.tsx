@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 
@@ -13,24 +14,23 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group relative">
-      <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
-        <Image
-          src={imageUrl}
-          alt={imageAlt}
-          className="h-full w-full object-cover object-center"
-          width={300}
-          height={300}
-        />
-      </div>
-      <div className="mt-4 flex justify-between">
-        <div>
+      <Link href={`/products/${product.handle}`} className="block">
+        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
+          <Image
+            src={imageUrl}
+            alt={imageAlt}
+            className="h-full w-full object-cover object-center"
+            width={300}
+            height={300}
+          />
+        </div>
+        <div className="mt-4">
           <h3 className="text-sm text-gray-700">
-            <span aria-hidden="true" className="absolute inset-0" />
             {product.title}
           </h3>
           <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
         </div>
-      </div>
+      </Link>
       <div className="mt-2">
         {product.variants.map((variant) => (
           <div key={variant.id} className="mb-2">
@@ -39,15 +39,13 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <p className="text-sm text-gray-500">{variant.title}</p>
               )}
               {variant.sku && (
-                <div className="text-sm text-gray-500 flex items-center">
+                <button
+                  onClick={() => navigator.clipboard.writeText(variant.sku)}
+                  className="text-sm text-gray-500 flex items-center hover:text-gray-700 transition-colors"
+                >
                   <span className="mr-1">SKU: {variant.sku}</span>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(variant.sku)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    📋
-                  </button>
-                </div>
+                  <span className="text-gray-400 hover:text-gray-600">📋</span>
+                </button>
               )}
             </div>
             <div className="flex items-center">
