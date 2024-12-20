@@ -1,5 +1,5 @@
-import { Product, DiscountSettings } from '@/types';
-import { calculateDiscount, formatPrice } from './utils';
+import { Product, ProductVariant, DiscountSettings } from '@/types';
+import { formatPrice } from '@/lib/utils';
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
 const storefrontAccessToken = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_ACCESS_TOKEN!;
@@ -276,10 +276,10 @@ export function getShopifyClient() {
           };
         });
 
-        console.log('Processed products:', products.map(p => ({
+        console.log('Processed products:', products.map((p: Product) => ({
           title: p.title,
           tags: p.tags,
-          variants: p.variants.map(v => ({
+          variants: p.variants.map((v: ProductVariant) => ({
             title: v.title,
             price: v.price,
             discountedPrice: v.discountedPrice,
