@@ -139,6 +139,8 @@ export default function Home() {
     );
   };
 
+  const predefinedTags = ['tag1', 'tag2', 'tag3'];
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -183,11 +185,12 @@ export default function Home() {
           </select>
 
           <FilterSection
-            vendors={availableVendors}
+            availableVendors={availableVendors}
             selectedVendors={selectedVendors}
-            onVendorChange={handleVendorChange}
+            onVendorSelect={handleVendorChange}
+            availableTags={predefinedTags}
             selectedTags={selectedTags}
-            onTagChange={handleTagChange}
+            onTagSelect={handleTagChange}
           />
         </div>
 

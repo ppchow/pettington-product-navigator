@@ -1,11 +1,13 @@
 import React from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface FilterSectionProps {
-  vendors: string[];
+  availableVendors: string[];
   selectedVendors: string[];
-  onVendorChange: (vendor: string) => void;
+  onVendorSelect: (vendor: string) => void;
+  availableTags: string[];
   selectedTags: string[];
-  onTagChange: (tag: string) => void;
+  onTagSelect: (tag: string) => void;
 }
 
 const predefinedTags = [
@@ -16,84 +18,73 @@ const predefinedTags = [
 ];
 
 export default function FilterSection({
-  vendors,
+  availableVendors,
   selectedVendors,
-  onVendorChange,
+  onVendorSelect,
+  availableTags = predefinedTags,
   selectedTags,
-  onTagChange
+  onTagSelect,
 }: FilterSectionProps) {
   return (
-    <div className="filter-section mt-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Vendor Filter */}
-        <div className="vendor-filter">
-          <h3 className="text-lg font-semibold mb-3">Vendor</h3>
-          <div className="space-y-2">
-            {vendors.map((vendor) => (
-              <label key={vendor} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={selectedVendors.includes(vendor)}
-                  onChange={() => onVendorChange(vendor)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">{vendor}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Tag Filter */}
-        <div className="tag-filter">
-          <h3 className="text-lg font-semibold mb-3">Product Type</h3>
-          <div className="space-y-2">
-            {predefinedTags.map((tag) => (
-              <label key={tag} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={selectedTags.includes(tag)}
-                  onChange={() => onTagChange(tag)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">{tag}</span>
-              </label>
-            ))}
-          </div>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Vendors</h3>
+        <div className="flex flex-wrap gap-2">
+          {availableVendors.map((vendor) => (
+            <button
+              key={vendor}
+              onClick={() => onVendorSelect(vendor)}
+              className={`
+                px-3 py-1.5 rounded-full text-sm font-medium
+                transition-all duration-200 ease-in-out
+                flex items-center gap-1
+                ${
+                  selectedVendors.includes(vendor)
+                    ? 'bg-blue-100 text-blue-800 border-2 border-blue-300 hover:bg-blue-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                }
+              `}
+            >
+              {vendor}
+              {selectedVendors.includes(vendor) && (
+                <XMarkIcon className="w-4 h-4" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Active Filters */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Product Type</h3>
+        <div className="flex flex-wrap gap-2">
+          {availableTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => onTagSelect(tag)}
+              className={`
+                px-3 py-1.5 rounded-full text-sm font-medium
+                transition-all duration-200 ease-in-out
+                flex items-center gap-1
+                ${
+                  selectedTags.includes(tag)
+                    ? 'bg-indigo-100 text-indigo-800 border-2 border-indigo-300 hover:bg-indigo-200'
+                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                }
+              `}
+            >
+              {tag}
+              {selectedTags.includes(tag) && (
+                <XMarkIcon className="w-4 h-4" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {(selectedVendors.length > 0 || selectedTags.length > 0) && (
-        <div className="mt-4">
-          <div className="flex flex-wrap gap-2">
-            {selectedVendors.map((vendor) => (
-              <span
-                key={vendor}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-              >
-                {vendor}
-                <button
-                  onClick={() => onVendorChange(vendor)}
-                  className="ml-2 text-blue-600 hover:text-blue-800"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-            {selectedTags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
-              >
-                {tag}
-                <button
-                  onClick={() => onTagChange(tag)}
-                  className="ml-2 text-green-600 hover:text-green-800"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
+        <div className="pt-2">
+          <div className="text-sm text-gray-500">
+            Active Filters ({selectedVendors.length + selectedTags.length})
           </div>
         </div>
       )}
