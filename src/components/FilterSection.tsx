@@ -36,6 +36,14 @@ const collectionTags = {
     '心血管健康',
     '口腔護理'
   ],
+  'prescription-diet-cats-dogs': [
+    '腎臟處方糧',
+    '腸胃處方糧',
+    '泌尿道處方糧',
+    '低敏處方糧',
+    '糖尿病處方糧',
+    '體重控制處方糧'
+  ],
   'default': []
 };
 
