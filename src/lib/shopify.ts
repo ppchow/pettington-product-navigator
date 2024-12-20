@@ -233,12 +233,12 @@ export function getShopifyClient() {
             const compareAtPrice = variant.compareAtPrice?.amount;
 
             // Calculate discount based on tags
-            let discountPercentage = null;
-            let discountedPrice = null;
+            let discountPercentage: number | null = null;
+            let discountedPrice: string | null = null;
 
-            if (node.tags.some(tag => tag.includes('處方糧')) && discountSettings.prescription_enabled) {
+            if (node.tags.some((tag: string) => tag.includes('處方糧')) && discountSettings.prescription_enabled) {
               discountPercentage = discountSettings.prescription_percentage;
-            } else if (node.tags.some(tag => tag.includes('驅蟲除蚤產品')) && discountSettings.parasite_enabled) {
+            } else if (node.tags.some((tag: string) => tag.includes('驅蟲除蚤產品')) && discountSettings.parasite_enabled) {
               discountPercentage = discountSettings.parasite_percentage;
             } else if (discountSettings.default_enabled) {
               discountPercentage = discountSettings.default_percentage;
