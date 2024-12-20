@@ -97,22 +97,17 @@ export default function Home() {
         const shopify = getShopifyClient();
         if (selectedCollection) {
           const productsData = await shopify.getProductsByCollection(selectedCollection);
-          const productsWithAvailability = productsData.map((product: Product) => ({
-            ...product,
-            isAvailable: product.variants.some(variant => variant.isAvailable)
-          }));
-          setProducts(productsWithAvailability);
+          setProducts(productsData);
           
           // Extract unique vendors
           const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
           setAvailableVendors(vendors);
           
           // Initialize filtered products
-          setFilteredProducts(productsWithAvailability);
+          setFilteredProducts(productsData);
         }
       } catch (error) {
         console.error('Error loading products:', error);
-        setError('Failed to load products');
       } finally {
         setIsLoading(false);
       }

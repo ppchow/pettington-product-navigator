@@ -119,7 +119,6 @@ export function getShopifyClient() {
           description: node.description,
           vendor: node.vendor,
           tags: node.tags,
-          isAvailable: node.availableForSale,
           price: new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: node.priceRange.minVariantPrice.currencyCode,
