@@ -251,7 +251,7 @@ export function getShopifyClient() {
         }
       );
 
-      console.log('Processed products:', products.map(p => ({
+      console.log('Processed products:', products.map((p: Product) => ({
         title: p.title,
         tags: p.tags,
         originalPrice: p.originalPrice,
