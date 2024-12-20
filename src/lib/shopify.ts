@@ -99,7 +99,6 @@ export function getShopifyClient() {
         query: `
           query GetProductsByCollection($handle: String!) {
             collection(handle: $handle) {
-              handle
               products(first: 250) {
                 edges {
                   node {
@@ -174,7 +173,6 @@ export function getShopifyClient() {
             }).format(edge.node.price.amount),
             isAvailable: edge.node.availableForSale
           })),
-          isAvailable: node.availableForSale
         })
       );
 
@@ -250,4 +248,91 @@ export function getShopifyClient() {
       ) || [];
     },
   };
+}
+
+export async function getProductsByCollection(collectionHandle: string): Promise<Product[]> {
+  const response = await shopifyFetch({
+    query: `
+      query GetProductsByCollection($handle: String!) {
+        collection(handle: $handle) {
+          products(first: 250) {
+            edges {
+              node {
+                id
+                handle
+                title
+                description
+                tags
+                vendor
+                priceRange {
+                  minVariantPrice {
+                    amount
+                  }
+                }
+                images(first: 1) {
+                  edges {
+                    node {
+                      url
+                      altText
+                    }
+                  }
+                }
+                variants(first: 100) {
+                  edges {
+                    node {
+                      id
+                      title
+                      price: priceV2 {
+                        amount
+                      }
+                      availableForSale
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `,
+    variables: {
+      handle: collectionHandle,
+    },
+  });
+
+  const discountSettings = await getDiscountSettings();
+
+  return response.body?.data?.collection?.products?.edges?.map(
+    ({ node }: any): Product => {
+      const price = formatPrice(node.priceRange.minVariantPrice.amount);
+      const baseProduct = {
+        id: node.id,
+        handle: node.handle,
+        title: node.title,
+        description: node.description,
+        vendor: node.vendor,
+        tags: node.tags,
+        price,
+        originalPrice: price,
+        images: node.images.edges.map((edge: any) => edge.node.url),
+        imageUrl: node.images.edges[0]?.node.url || '',
+        imageAltText: node.images.edges[0]?.node.altText || node.title,
+        collection: collectionHandle,
+        variants: node.variants?.edges?.map((edge: any) => ({
+          id: edge.node.id,
+          title: edge.node.title,
+          price: formatPrice(edge.node.price.amount),
+          isAvailable: edge.node.availableForSale
+        }))
+      };
+
+      const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
+
+      return {
+        ...baseProduct,
+        discountedPrice,
+        discountPercentage,
+      };
+    }
+  ) || [];
 }
