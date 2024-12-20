@@ -4,6 +4,9 @@ export function calculateDiscount(product: Product, discountSettings: DiscountSe
   discountedPrice: string | null;
   discountPercentage: number | null;
 } {
+  console.log('Calculating discount for product:', product.title); // Debug log
+  console.log('With settings:', discountSettings); // Debug log
+
   let discountPercentage: number | null = null;
 
   // Check for prescription tag and if prescription discount is enabled
@@ -19,8 +22,8 @@ export function calculateDiscount(product: Product, discountSettings: DiscountSe
     discountPercentage = discountSettings.default_percentage;
   }
 
-  // If no discount applies or percentage is 0, return null values
   if (!discountPercentage) {
+    console.log('No discount applied'); // Debug log
     return {
       discountedPrice: null,
       discountPercentage: null
@@ -30,6 +33,10 @@ export function calculateDiscount(product: Product, discountSettings: DiscountSe
   const originalPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
   const discountAmount = originalPrice * (discountPercentage / 100);
   const finalPrice = originalPrice - discountAmount;
+
+  console.log('Original amount:', originalPrice); // Debug log
+  console.log('Discounted amount:', finalPrice); // Debug log
+  console.log('Discount percentage:', discountPercentage); // Debug log
 
   return {
     discountedPrice: new Intl.NumberFormat('en-US', {
@@ -41,6 +48,7 @@ export function calculateDiscount(product: Product, discountSettings: DiscountSe
 }
 
 export function formatPrice(price: number | string): string {
+  console.log('Formatting price:', price); // Debug log
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'HKD'

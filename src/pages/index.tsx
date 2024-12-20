@@ -83,6 +83,7 @@ export default function Home() {
         const shopify = getShopifyClient();
         if (selectedCollection) {
           const productsData = await shopify.getProductsByCollection(selectedCollection);
+          console.log('Loaded products:', productsData); // Debug log
           setProducts(productsData);
           
           // Extract unique vendors
@@ -129,6 +130,7 @@ export default function Home() {
       );
     }
 
+    console.log('Filtered products:', filtered); // Debug log
     setFilteredProducts(filtered);
   }, [products, selectedVendors, selectedTags, selectedPetTypes]);
 

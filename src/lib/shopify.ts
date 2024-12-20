@@ -21,9 +21,19 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
       body: JSON.stringify({ query, variables }),
     });
 
+    const response = await result.json();
+    
+    // Debug logs
+    console.log('Shopify API Response:', JSON.stringify(response, null, 2));
+    
+    if (response.errors) {
+      console.error('Shopify API Errors:', response.errors);
+      throw new Error(response.errors[0].message);
+    }
+
     return {
       status: result.status,
-      body: await result.json(),
+      body: response,
     };
   } catch (error) {
     console.error('Error:', error);
@@ -48,6 +58,18 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
     `,
   });
   
+  if (!response.body?.data?.metaobject?.fields) {
+    console.error('No discount settings found:', response);
+    return {
+      prescription_enabled: false,
+      prescription_percentage: 0,
+      parasite_enabled: false,
+      parasite_percentage: 0,
+      default_enabled: false,
+      default_percentage: 0,
+    };
+  }
+
   const fields = response.body.data.metaobject.fields as MetaobjectField[];
   return {
     prescription_enabled: fields.find((f: MetaobjectField) => f.key === 'prescription_enabled')?.value === 'true',
@@ -78,6 +100,8 @@ export function getShopifyClient() {
         `,
       });
 
+      console.log('Collections response:', response); // Debug log
+
       return response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
           id: node.id,
@@ -88,6 +112,8 @@ export function getShopifyClient() {
     },
 
     getProductsByCollection: async (collectionHandle: string): Promise<Product[]> => {
+      console.log('Fetching products for collection:', collectionHandle); // Debug log
+      
       const response = await shopifyFetch({
         query: `
           query GetProductsByCollection($handle: String!) {
@@ -137,9 +163,12 @@ export function getShopifyClient() {
         },
       });
 
-      const discountSettings = await getDiscountSettings();
+      console.log('Products response:', response); // Debug log
 
-      return response.body?.data?.collection?.products?.edges?.map(
+      const discountSettings = await getDiscountSettings();
+      console.log('Discount settings:', discountSettings); // Debug log
+
+      const products = response.body?.data?.collection?.products?.edges?.map(
         ({ node }: any): Product => {
           const price = formatPrice(node.priceRange.minVariantPrice.amount);
           const baseProduct = {
@@ -173,6 +202,9 @@ export function getShopifyClient() {
           };
         }
       ) || [];
+
+      console.log('Mapped products:', products); // Debug log
+      return products;
     },
   };
 }
