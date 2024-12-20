@@ -151,6 +151,8 @@ export function getShopifyClient() {
         query: `
           query GetProductsByCollection($handle: String!) {
             collection(handle: $handle) {
+              handle
+              title
               products(first: 250) {
                 edges {
                   node {
@@ -163,6 +165,7 @@ export function getShopifyClient() {
                     priceRange {
                       minVariantPrice {
                         amount
+                        currencyCode
                       }
                     }
                     images(first: 1) {
@@ -181,6 +184,7 @@ export function getShopifyClient() {
                           sku
                           priceV2 {
                             amount
+                            currencyCode
                           }
                           availableForSale
                         }
@@ -197,20 +201,14 @@ export function getShopifyClient() {
         },
       });
 
-      console.log('Products response:', response);
+      console.log('Products API response:', JSON.stringify(response, null, 2));
 
       if (!response.body?.data?.collection?.products?.edges) {
         console.error('No products found in response:', response);
         return [];
       }
 
-      // Store discount settings in window for debugging
-      if (typeof window !== 'undefined') {
-        (window as any).__discountSettings = discountSettings;
-        console.log('Stored discount settings in window.__discountSettings');
-      }
-
-      return response.body.data.collection.products.edges.map(
+      const products = response.body.data.collection.products.edges.map(
         ({ node }: any): Product => {
           const price = formatPrice(node.priceRange.minVariantPrice.amount);
           const baseProduct = {
@@ -237,8 +235,9 @@ export function getShopifyClient() {
           };
 
           const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
-          console.log('Calculated discount for product:', {
+          console.log('Product discount calculation:', {
             title: baseProduct.title,
+            tags: baseProduct.tags,
             originalPrice: baseProduct.price,
             discountedPrice,
             discountPercentage
@@ -251,6 +250,16 @@ export function getShopifyClient() {
           };
         }
       );
+
+      console.log('Processed products:', products.map(p => ({
+        title: p.title,
+        tags: p.tags,
+        originalPrice: p.originalPrice,
+        discountedPrice: p.discountedPrice,
+        discountPercentage: p.discountPercentage
+      })));
+
+      return products;
     },
   };
 }

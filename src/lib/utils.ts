@@ -5,6 +5,8 @@ export function formatPrice(amount: string | number): string {
   return new Intl.NumberFormat('en-HK', {
     style: 'currency',
     currency: 'HKD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(price);
 }
 
@@ -15,18 +17,24 @@ export function calculateDiscount(product: Product, settings: DiscountSettings):
   console.log('Calculating discount for:', {
     title: product.title,
     tags: product.tags,
-    settings
+    settings,
+    originalPrice: product.originalPrice
   });
 
   let discountPercentage = null;
 
   // Check for prescription discount
-  if (settings.prescription_enabled && product.tags.includes('prescription')) {
+  if (settings.prescription_enabled && 
+      (product.tags.includes('prescription') || 
+       product.tags.includes('處方') || 
+       product.collection === 'prescription-diet-cats-dogs')) {
     discountPercentage = settings.prescription_percentage;
     console.log('Applying prescription discount:', discountPercentage);
   }
   // Check for parasite product discount
-  else if (settings.parasite_enabled && product.tags.includes('驅蟲除蚤產品')) {
+  else if (settings.parasite_enabled && 
+           (product.tags.includes('驅蟲除蚤產品') || 
+            product.tags.includes('parasite'))) {
     discountPercentage = settings.parasite_percentage;
     console.log('Applying parasite discount:', discountPercentage);
   }
@@ -51,7 +59,8 @@ export function calculateDiscount(product: Product, settings: DiscountSettings):
   console.log('Discount calculation:', {
     originalPrice,
     discountPercentage,
-    finalPrice
+    finalPrice,
+    formattedPrice: formatPrice(finalPrice)
   });
 
   return {
