@@ -1,9 +1,12 @@
-export interface Variant {
+export interface ProductVariant {
   id: string;
   title: string;
-  price: string;
-  isAvailable: boolean;
   sku: string;
+  price: string;
+  availableForSale: boolean;
+  compareAtPrice?: string | null;
+  discountedPrice?: string | null;
+  discountPercentage?: number | null;
 }
 
 export interface DiscountSettings {
@@ -17,17 +20,14 @@ export interface DiscountSettings {
 
 export interface Product {
   id: string;
-  handle: string;
   title: string;
-  description: string;
-  vendor: string;
+  handle: string;
   tags: string[];
-  price: string;
-  originalPrice: string;
-  discountedPrice: string | null;
-  discountPercentage: number | null;
-  imageUrl: string;
-  imageAltText: string;
-  collection: string;
-  variants?: Variant[];
+  images: {
+    url: string;
+    altText: string | null;
+  }[];
+  variants: ProductVariant[];
+  vendor: string;
+  collection?: string;
 }

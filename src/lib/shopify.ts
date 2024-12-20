@@ -167,35 +167,22 @@ export function getShopifyClient() {
       ) || [];
     },
 
-    getProductsByCollection: async (collectionHandle: string): Promise<Product[]> => {
-      console.log('Fetching products for collection:', collectionHandle);
-      
-      // First fetch discount settings
-      const discountSettings = await getDiscountSettings();
-      console.log('Fetched discount settings:', discountSettings);
+    getProductsByCollection: async (collectionHandle: string | null = null): Promise<Product[]> => {
+      try {
+        const discountSettings = await getDiscountSettings();
+        console.log('Fetched discount settings:', discountSettings);
 
-      // Then fetch products
-      const response = await shopifyFetch({
-        query: `
-          query GetProductsByCollection($handle: String!) {
-            collection(handle: $handle) {
-              handle
-              title
-              products(first: 250) {
+        const response = await shopifyFetch({
+          query: `
+            query GetProducts($first: Int!, $query: String) {
+              products(first: $first, query: $query) {
                 edges {
                   node {
                     id
-                    handle
                     title
-                    description
-                    vendor
+                    handle
                     tags
-                    priceRange {
-                      minVariantPrice {
-                        amount
-                        currencyCode
-                      }
-                    }
+                    vendor
                     images(first: 1) {
                       edges {
                         node {
@@ -204,13 +191,17 @@ export function getShopifyClient() {
                         }
                       }
                     }
-                    variants(first: 100) {
+                    variants(first: 10) {
                       edges {
                         node {
                           id
                           title
                           sku
-                          priceV2 {
+                          price {
+                            amount
+                            currencyCode
+                          }
+                          compareAtPrice {
                             amount
                             currencyCode
                           }
@@ -222,72 +213,86 @@ export function getShopifyClient() {
                 }
               }
             }
-          }
-        `,
-        variables: {
-          handle: collectionHandle,
-        },
-      });
+          `,
+          variables: {
+            first: 250,
+            query: collectionHandle ? `collection_type:${collectionHandle}` : '',
+          },
+        });
 
-      console.log('Products API response:', JSON.stringify(response, null, 2));
+        if (!response?.body?.data?.products?.edges) {
+          console.error('No products found in response:', response);
+          return [];
+        }
 
-      if (!response.body?.data?.collection?.products?.edges) {
-        console.error('No products found in response:', response);
-        return [];
-      }
+        const products = response.body.data.products.edges.map((edge: any) => {
+          const node = edge.node;
+          const variants = node.variants.edges.map((variantEdge: any) => {
+            const variant = variantEdge.node;
+            const price = variant.price.amount;
+            const compareAtPrice = variant.compareAtPrice?.amount;
 
-      const products = response.body.data.collection.products.edges.map(
-        ({ node }: any): Product => {
-          const price = formatPrice(node.priceRange.minVariantPrice.amount);
-          const baseProduct = {
-            id: node.id,
-            handle: node.handle,
-            title: node.title,
-            description: node.description,
-            vendor: node.vendor,
-            tags: node.tags,
-            price,
-            originalPrice: price,
-            imageUrl: node.images.edges[0]?.node.url || '',
-            imageAltText: node.images.edges[0]?.node.altText || node.title,
-            collection: collectionHandle,
-            variants: node.variants?.edges?.map((edge: any) => ({
-              id: edge.node.id,
-              title: edge.node.title,
-              price: formatPrice(edge.node.priceV2.amount),
-              isAvailable: edge.node.availableForSale,
-              sku: edge.node.sku || ''
-            })),
-            discountedPrice: null,
-            discountPercentage: null
-          };
+            // Calculate discount based on tags
+            let discountPercentage = null;
+            let discountedPrice = null;
 
-          const { discountedPrice, discountPercentage } = calculateDiscount(baseProduct, discountSettings);
-          console.log('Product discount calculation:', {
-            title: baseProduct.title,
-            tags: baseProduct.tags,
-            originalPrice: baseProduct.price,
-            discountedPrice,
-            discountPercentage
+            if (node.tags.some(tag => tag.includes('處方糧')) && discountSettings.prescription_enabled) {
+              discountPercentage = discountSettings.prescription_percentage;
+            } else if (node.tags.some(tag => tag.includes('驅蟲除蚤產品')) && discountSettings.parasite_enabled) {
+              discountPercentage = discountSettings.parasite_percentage;
+            } else if (discountSettings.default_enabled) {
+              discountPercentage = discountSettings.default_percentage;
+            }
+
+            if (discountPercentage) {
+              const originalPrice = parseFloat(price);
+              discountedPrice = (originalPrice * (1 - discountPercentage / 100)).toString();
+            }
+
+            return {
+              id: variant.id,
+              title: variant.title,
+              sku: variant.sku || '',
+              price: formatPrice(price),
+              compareAtPrice: compareAtPrice ? formatPrice(compareAtPrice) : null,
+              availableForSale: variant.availableForSale,
+              discountedPrice: discountedPrice ? formatPrice(discountedPrice) : null,
+              discountPercentage
+            };
           });
 
           return {
-            ...baseProduct,
-            discountedPrice,
-            discountPercentage,
+            id: node.id,
+            title: node.title,
+            handle: node.handle,
+            tags: node.tags,
+            vendor: node.vendor,
+            collection: collectionHandle || '',
+            images: node.images.edges.map((imageEdge: any) => ({
+              url: imageEdge.node.url,
+              altText: imageEdge.node.altText
+            })),
+            variants
           };
-        }
-      );
+        });
 
-      console.log('Processed products:', products.map((p: Product) => ({
-        title: p.title,
-        tags: p.tags,
-        originalPrice: p.originalPrice,
-        discountedPrice: p.discountedPrice,
-        discountPercentage: p.discountPercentage
-      })));
+        console.log('Processed products:', products.map(p => ({
+          title: p.title,
+          tags: p.tags,
+          variants: p.variants.map(v => ({
+            title: v.title,
+            price: v.price,
+            discountedPrice: v.discountedPrice,
+            discountPercentage: v.discountPercentage,
+            availableForSale: v.availableForSale
+          }))
+        })));
 
-      return products;
+        return products;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        return [];
+      }
     },
   };
 }

@@ -1,84 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Image from 'next/image';
 import { Product } from '@/types';
+import { formatPrice } from '@/lib/utils';
 
-export default function ProductCard({ product }: { product: Product }) {
-  const [copiedSku, setCopiedSku] = useState<string | null>(null);
+interface ProductCardProps {
+  product: Product;
+}
 
-  const handleCopySku = async (sku: string) => {
-    try {
-      await navigator.clipboard.writeText(sku);
-      setCopiedSku(sku);
-      setTimeout(() => setCopiedSku(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy SKU:', err);
-    }
-  };
+export default function ProductCard({ product }: ProductCardProps) {
+  // Get the first variant as default
+  const defaultVariant = product.variants[0];
+  const imageUrl = product.images[0]?.url || '';
+  const imageAlt = product.images[0]?.altText || product.title;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200">
-      <div className="relative aspect-square">
+    <div className="group relative">
+      <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
         <Image
-          src={product.imageUrl}
-          alt={product.imageAltText}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover rounded-t-lg"
+          src={imageUrl}
+          alt={imageAlt}
+          className="h-full w-full object-cover object-center"
+          width={300}
+          height={300}
         />
       </div>
-      <div className="p-4">
-        <h3 className="text-sm font-medium text-gray-900 truncate">{product.title}</h3>
-        <p className="text-sm text-gray-500 truncate">{product.vendor}</p>
-        
-        <div className="mt-2">
-          {product.discountedPrice ? (
-            <div className="flex flex-col">
-              <span className="text-gray-500 line-through text-sm">{product.originalPrice}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-red-600">{product.discountedPrice}</span>
-                <span className="text-sm bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
-                  -{product.discountPercentage}%
-                </span>
-              </div>
+      <div className="mt-4 flex justify-between">
+        <div>
+          <h3 className="text-sm text-gray-700">
+            <span aria-hidden="true" className="absolute inset-0" />
+            {product.title}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
+          {defaultVariant.sku && (
+            <div className="mt-1 text-sm text-gray-500 flex items-center">
+              <span>SKU: {defaultVariant.sku}</span>
+              <button
+                onClick={() => navigator.clipboard.writeText(defaultVariant.sku)}
+                className="ml-2 text-gray-400 hover:text-gray-600"
+              >
+                📋
+              </button>
             </div>
-          ) : (
-            <span className="text-lg font-bold">{product.originalPrice}</span>
           )}
         </div>
-        
-        {product.variants && product.variants.length > 0 && (
-          <div className="text-xs space-y-1 mt-4">
-            {product.variants.map((variant) => (
-              <div key={variant.id} className="flex flex-col space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">{variant.title}</span>
-                  <button
-                    onClick={() => handleCopySku(variant.sku)}
-                    className="flex items-center text-gray-500 hover:text-blue-600"
-                    title="Click to copy SKU"
-                  >
-                    <span className="mr-1">{variant.sku}</span>
-                    {copiedSku === variant.sku ? (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className={variant.isAvailable ? 'text-green-600' : 'text-red-600'}>
-                    {variant.isAvailable ? 'In Stock' : 'Out of Stock'}
+      </div>
+      <div className="mt-2">
+        {product.variants.map((variant) => (
+          <div key={variant.id} className="mb-2">
+            {variant.title !== 'Default Title' && (
+              <p className="text-sm text-gray-500">{variant.title}</p>
+            )}
+            <div className="flex items-center">
+              {variant.discountedPrice ? (
+                <>
+                  <p className="text-sm text-gray-900 line-through">{variant.price}</p>
+                  <p className="ml-2 text-sm text-red-600">{variant.discountedPrice}</p>
+                  <span className="ml-2 text-sm text-red-600">
+                    (-{variant.discountPercentage}%)
                   </span>
-                  <span className="font-medium">{variant.price}</span>
-                </div>
-              </div>
-            ))}
+                </>
+              ) : (
+                <p className="text-sm text-gray-900">{variant.price}</p>
+              )}
+              {!variant.availableForSale && (
+                <span className="ml-2 text-sm text-red-600">Not available</span>
+              )}
+            </div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
