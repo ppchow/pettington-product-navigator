@@ -46,44 +46,38 @@ async function shopifyFetch({ query, variables }: { query: string; variables?: a
 
 async function getDiscountSettings(): Promise<DiscountSettings> {
   try {
-    // First try to list all metaobjects of this type
-    const listResponse = await shopifyFetch({
+    // Try to get the specific metaobject by global ID
+    const response = await shopifyFetch({
       query: `
         query {
-          metaobjects(type: "event_discount_settings", first: 10) {
-            edges {
-              node {
-                id
-                handle
-                type
-                fields {
-                  key
-                  value
-                }
-              }
+          metaobject(id: "gid://shopify/Metaobject/81585340616") {
+            handle
+            type
+            fields {
+              key
+              value
             }
           }
         }
       `,
     });
 
-    console.log('List of metaobjects:', {
-      status: listResponse.status,
-      body: listResponse.body,
-      error: listResponse.error,
-      edges: listResponse.body?.data?.metaobjects?.edges
+    console.log('Metaobject response:', {
+      status: response.status,
+      body: response.body,
+      error: response.error,
+      data: response.body?.data
     });
 
-    // If listing works, use the first metaobject we find
-    const firstMetaobject = listResponse.body?.data?.metaobjects?.edges?.[0]?.node;
-    if (firstMetaobject?.fields) {
-      const fields = firstMetaobject.fields;
+    const metaobject = response.body?.data?.metaobject;
+    if (metaobject?.fields) {
+      const fields = metaobject.fields;
       const settings = fields.reduce((acc: any, field: MetaobjectField) => {
         acc[field.key] = field.value;
         return acc;
       }, {});
 
-      console.log('Raw settings from list:', settings);
+      console.log('Raw settings:', settings);
 
       const parsedSettings = {
         prescription_enabled: settings.prescription_enabled === 'true',
@@ -98,64 +92,25 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       return parsedSettings;
     }
 
-    // If listing fails, try direct query
-    const response = await shopifyFetch({
-      query: `
-        query {
-          metaobject(handle: {handle: "81585340616", type: "event_discount_settings"}) {
-            handle
-            fields {
-              key
-              value
-            }
-          }
-        }
-      `,
-    });
-
-    console.log('Raw metaobject response:', {
-      status: response.status,
-      body: response.body,
-      error: response.error
-    });
-
-    if (!response.body?.data?.metaobject?.fields) {
-      console.error('No discount settings found. Response:', {
-        status: response.status,
-        body: response.body,
-        error: response.error
-      });
-      throw new Error('Discount settings not found');
-    }
-
-    const fields = response.body.data.metaobject.fields;
-    const settings = fields.reduce((acc: any, field: MetaobjectField) => {
-      acc[field.key] = field.value;
-      return acc;
-    }, {});
-
-    console.log('Raw settings:', settings);
-
-    const parsedSettings = {
-      prescription_enabled: settings.prescription_enabled === 'true',
-      prescription_percentage: parseFloat(settings.prescription_percentage || '0'),
-      parasite_enabled: settings.parasite_enabled === 'true',
-      parasite_percentage: parseFloat(settings.parasite_percentage || '0'),
-      default_enabled: settings.default_enabled === 'true',
-      default_percentage: parseFloat(settings.default_percentage || '0'),
+    // If we can't find the metaobject, return default settings
+    console.error('No discount settings found');
+    return {
+      prescription_enabled: true,
+      prescription_percentage: 10,
+      parasite_enabled: true,
+      parasite_percentage: 10,
+      default_enabled: true,
+      default_percentage: 5,
     };
-
-    console.log('Parsed discount settings:', parsedSettings);
-    return parsedSettings;
   } catch (error) {
     console.error('Error fetching discount settings:', error);
     return {
-      prescription_enabled: false,
-      prescription_percentage: 0,
-      parasite_enabled: false,
-      parasite_percentage: 0,
-      default_enabled: false,
-      default_percentage: 0,
+      prescription_enabled: true,
+      prescription_percentage: 10,
+      parasite_enabled: true,
+      parasite_percentage: 10,
+      default_enabled: true,
+      default_percentage: 5,
     };
   }
 }
