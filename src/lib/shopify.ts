@@ -48,6 +48,8 @@ export function getShopifyClient() {
         `,
       });
 
+      console.log('Collections response:', response.body?.data?.collections?.edges);
+
       const collections = response.body?.data?.collections?.edges?.map(
         ({ node }: any) => ({
           id: node.id,
@@ -55,6 +57,8 @@ export function getShopifyClient() {
           title: node.title,
         })
       );
+
+      console.log('Processed collections:', collections);
 
       return collections || [];
     },
