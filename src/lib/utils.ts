@@ -1,56 +1,61 @@
 import { Product, DiscountSettings } from '@/types';
 
-export function calculateDiscount(product: Product, discountSettings: DiscountSettings): {
+export function formatPrice(amount: string | number): string {
+  const price = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('en-HK', {
+    style: 'currency',
+    currency: 'HKD',
+  }).format(price);
+}
+
+export function calculateDiscount(product: Product, settings: DiscountSettings): {
   discountedPrice: string | null;
   discountPercentage: number | null;
 } {
-  console.log('Calculating discount for product:', product.title); // Debug log
-  console.log('With settings:', discountSettings); // Debug log
+  console.log('Calculating discount for product:', {
+    title: product.title,
+    tags: product.tags,
+    settings
+  });
 
-  let discountPercentage: number | null = null;
+  let discountPercentage = null;
 
-  // Check for prescription tag and if prescription discount is enabled
-  if (discountSettings.prescription_enabled && product.tags.includes('prescription')) {
-    discountPercentage = discountSettings.prescription_percentage;
+  // Check for prescription discount
+  if (settings.prescription_enabled && product.tags.includes('prescription')) {
+    discountPercentage = settings.prescription_percentage;
+    console.log('Applying prescription discount:', discountPercentage);
   }
-  // Check for parasite product tag and if parasite discount is enabled
-  else if (discountSettings.parasite_enabled && product.tags.includes('驅蟲除蚤產品')) {
-    discountPercentage = discountSettings.parasite_percentage;
+  // Check for parasite product discount
+  else if (settings.parasite_enabled && product.tags.includes('驅蟲除蚤產品')) {
+    discountPercentage = settings.parasite_percentage;
+    console.log('Applying parasite discount:', discountPercentage);
   }
-  // Apply default discount if enabled and no other discounts apply
-  else if (discountSettings.default_enabled) {
-    discountPercentage = discountSettings.default_percentage;
+  // Check for default discount
+  else if (settings.default_enabled) {
+    discountPercentage = settings.default_percentage;
+    console.log('Applying default discount:', discountPercentage);
   }
 
   if (!discountPercentage) {
-    console.log('No discount applied'); // Debug log
+    console.log('No discount applied');
     return {
       discountedPrice: null,
       discountPercentage: null
     };
   }
 
-  const originalPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
-  const discountAmount = originalPrice * (discountPercentage / 100);
-  const finalPrice = originalPrice - discountAmount;
+  // Remove currency symbol and commas before parsing
+  const originalPrice = parseFloat(product.originalPrice.replace(/[^0-9.-]+/g, ''));
+  const finalPrice = originalPrice * (1 - discountPercentage / 100);
 
-  console.log('Original amount:', originalPrice); // Debug log
-  console.log('Discounted amount:', finalPrice); // Debug log
-  console.log('Discount percentage:', discountPercentage); // Debug log
+  console.log('Discount calculation:', {
+    originalPrice,
+    discountPercentage,
+    finalPrice
+  });
 
   return {
-    discountedPrice: new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'HKD'
-    }).format(finalPrice),
+    discountedPrice: formatPrice(finalPrice),
     discountPercentage
   };
-}
-
-export function formatPrice(price: number | string): string {
-  console.log('Formatting price:', price); // Debug log
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'HKD'
-  }).format(typeof price === 'string' ? parseFloat(price) : price);
 }

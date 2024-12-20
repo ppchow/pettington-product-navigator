@@ -48,7 +48,7 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
   const response = await shopifyFetch({
     query: `
       query GetDiscountSettings {
-        metaobject(handle: "event_discount_settings") {
+        metaobject(handle: "event-discount-settings-8rafyxmo") {
           fields {
             key
             value
@@ -57,7 +57,9 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
       }
     `,
   });
-  
+
+  console.log('Discount settings response:', response);
+
   if (!response.body?.data?.metaobject?.fields) {
     console.error('No discount settings found:', response);
     return {
@@ -71,14 +73,17 @@ async function getDiscountSettings(): Promise<DiscountSettings> {
   }
 
   const fields = response.body.data.metaobject.fields as MetaobjectField[];
-  return {
-    prescription_enabled: fields.find((f: MetaobjectField) => f.key === 'prescription_enabled')?.value === 'true',
-    prescription_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'prescription_percentage')?.value || '0'),
-    parasite_enabled: fields.find((f: MetaobjectField) => f.key === 'parasite_enabled')?.value === 'true',
-    parasite_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'parasite_percentage')?.value || '0'),
-    default_enabled: fields.find((f: MetaobjectField) => f.key === 'default_enabled')?.value === 'true',
-    default_percentage: parseFloat(fields.find((f: MetaobjectField) => f.key === 'default_percentage')?.value || '0'),
+  const settings = {
+    prescription_enabled: fields.find(f => f.key === 'prescription_enabled')?.value === 'true',
+    prescription_percentage: parseFloat(fields.find(f => f.key === 'prescription_percentage')?.value || '0'),
+    parasite_enabled: fields.find(f => f.key === 'parasite_enabled')?.value === 'true',
+    parasite_percentage: parseFloat(fields.find(f => f.key === 'parasite_percentage')?.value || '0'),
+    default_enabled: fields.find(f => f.key === 'default_enabled')?.value === 'true',
+    default_percentage: parseFloat(fields.find(f => f.key === 'default_percentage')?.value || '0'),
   };
+
+  console.log('Parsed discount settings:', settings);
+  return settings;
 }
 
 export function getShopifyClient() {
