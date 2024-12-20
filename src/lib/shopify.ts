@@ -62,6 +62,7 @@ export function getShopifyClient() {
         query: `
           query GetProductsByCollection($handle: String!) {
             collection(handle: $handle) {
+              handle
               products(first: 250) {
                 edges {
                   node {
@@ -121,7 +122,7 @@ export function getShopifyClient() {
           }).format(node.priceRange.minVariantPrice.amount),
           imageUrl: node.images.edges[0]?.node.url || '',
           imageAltText: node.images.edges[0]?.node.altText || node.title,
-          collection: collectionHandle,
+          collection: response.body?.data?.collection?.handle || collectionHandle,
           variants: node.variants.edges.map((edge: any) => ({
             id: edge.node.id,
             price: `${edge.node.price.amount} ${edge.node.price.currencyCode}`,

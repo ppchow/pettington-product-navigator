@@ -19,7 +19,7 @@ interface Product {
   price: string;
   imageUrl: string;
   imageAltText: string;
-  collection?: string;
+  collection: string;
   variants: {
     id: string;
     weight: number;
@@ -90,15 +90,17 @@ export default function Home() {
       setError(null);
       try {
         const shopify = getShopifyClient();
-        const productsData = await shopify.getProductsByCollection(selectedCollection);
-        setProducts(productsData);
-        
-        // Extract unique vendors
-        const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
-        setAvailableVendors(vendors);
-        
-        // Initialize filtered products
-        setFilteredProducts(productsData);
+        if (selectedCollection) {
+          const productsData = await shopify.getProductsByCollection(selectedCollection);
+          setProducts(productsData);
+          
+          // Extract unique vendors
+          const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
+          setAvailableVendors(vendors);
+          
+          // Initialize filtered products
+          setFilteredProducts(productsData);
+        }
       } catch (error) {
         console.error('Error loading products:', error);
         setError('Failed to load products');
@@ -107,9 +109,7 @@ export default function Home() {
       }
     }
 
-    if (selectedCollection) {
-      loadProducts();
-    }
+    loadProducts();
   }, [selectedCollection]);
 
   // Apply filters
