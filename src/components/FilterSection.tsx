@@ -58,7 +58,7 @@ const collectionTitles = {
   'prescription-diet-cats-dogs': '獸醫處方糧',
   'stella-chewys': "Stella & Chewy's",
   'wellness-1': 'Wellness',
-  'pet-grooming': '美容及清潔護理'
+  'pet-grooming': '美容及清潔護理 | Pettington 柏靈頓寵物用品店'
 };
 
 // Collection order
