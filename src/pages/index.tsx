@@ -27,6 +27,7 @@ interface Product {
     price: string;
     available: boolean;
   }[];
+  isAvailable: boolean;
 }
 
 export default function Home() {
@@ -94,14 +95,18 @@ export default function Home() {
         const shopify = getShopifyClient();
         if (selectedCollection) {
           const productsData = await shopify.getProductsByCollection(selectedCollection);
-          setProducts(productsData);
+          const productsWithAvailability = productsData.map((product: Product) => ({
+            ...product,
+            isAvailable: product.variants.some(variant => variant.available)
+          }));
+          setProducts(productsWithAvailability);
           
           // Extract unique vendors
           const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
           setAvailableVendors(vendors);
           
           // Initialize filtered products
-          setFilteredProducts(productsData);
+          setFilteredProducts(productsWithAvailability);
         }
       } catch (error) {
         console.error('Error loading products:', error);
@@ -255,7 +260,7 @@ export default function Home() {
                   imageAltText={product.imageAltText}
                   price={product.price}
                   variants={product.variants}
-                  isAvailable={product.variants.some(variant => variant.available)}
+                  isAvailable={product.isAvailable}
                 />
               ))}
             </div>

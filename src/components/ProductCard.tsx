@@ -41,25 +41,26 @@ export default function ProductCard({
             <span className="text-gray-400">No image</span>
           </div>
         )}
-      </div>
-      
-      <div className="p-3 space-y-1">
-        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{title}</h3>
-        
-        {variants.length > 0 && (
-          <div className="text-xs text-gray-600">
-            {variants.map((variant, index) => (
-              <div key={variant.id} className="flex justify-between items-center">
-                <span className="line-clamp-1">{variant.title}</span>
-                <span className="font-medium">{variant.price}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        
         {!isAvailable && (
           <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
             Not available
+          </div>
+        )}
+      </div>
+      
+      <div className="p-3 space-y-2">
+        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{title}</h3>
+        
+        {variants.length > 0 && (
+          <div className="text-xs space-y-1">
+            {variants.map((variant) => (
+              <div key={variant.id} className="flex justify-between items-center">
+                <span className="text-gray-600 line-clamp-1 flex-1">{variant.title}</span>
+                <span className={`ml-2 font-medium ${variant.isAvailable ? 'text-gray-900' : 'text-gray-400'}`}>
+                  {variant.price}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>

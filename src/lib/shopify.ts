@@ -129,8 +129,11 @@ export function getShopifyClient() {
           collection: response.body?.data?.collection?.handle || collectionHandle,
           variants: node.variants.edges.map((edge: any) => ({
             id: edge.node.id,
-            title: edge.node.title,
-            price: `${edge.node.price.amount} ${edge.node.price.currencyCode}`,
+            title: edge.node.title || '',
+            price: new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: edge.node.price.currencyCode,
+            }).format(edge.node.price.amount),
             isAvailable: edge.node.availableForSale
           }))
         })
