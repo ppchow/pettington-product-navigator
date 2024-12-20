@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 
@@ -9,28 +8,33 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const [copiedSku, setCopiedSku] = useState<string | null>(null);
   const imageUrl = product.images[0]?.url || '';
   const imageAlt = product.images[0]?.altText || product.title;
 
+  const handleCopySku = (sku: string) => {
+    navigator.clipboard.writeText(sku);
+    setCopiedSku(sku);
+    setTimeout(() => setCopiedSku(null), 2000);
+  };
+
   return (
     <div className="group relative">
-      <Link href={`/products/${product.handle}`} className="block">
-        <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
-          <Image
-            src={imageUrl}
-            alt={imageAlt}
-            className="h-full w-full object-cover object-center"
-            width={300}
-            height={300}
-          />
-        </div>
-        <div className="mt-4">
-          <h3 className="text-sm text-gray-700">
-            {product.title}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
-        </div>
-      </Link>
+      <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200">
+        <Image
+          src={imageUrl}
+          alt={imageAlt}
+          className="h-full w-full object-cover object-center"
+          width={300}
+          height={300}
+        />
+      </div>
+      <div className="mt-4">
+        <h3 className="text-sm text-gray-700">
+          {product.title}
+        </h3>
+        <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
+      </div>
       <div className="mt-2">
         {product.variants.map((variant) => (
           <div key={variant.id} className="mb-2">
@@ -39,13 +43,20 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <p className="text-sm text-gray-500">{variant.title}</p>
               )}
               {variant.sku && (
-                <button
-                  onClick={() => navigator.clipboard.writeText(variant.sku)}
-                  className="text-sm text-blue-600 flex items-center hover:text-blue-700 transition-colors cursor-pointer"
-                >
-                  <span className="mr-1">SKU: {variant.sku}</span>
-                  <span className="text-blue-500 hover:text-blue-600">📋</span>
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={() => handleCopySku(variant.sku)}
+                    className="text-sm text-blue-600 flex items-center hover:text-blue-700 transition-colors cursor-pointer"
+                  >
+                    <span className="mr-1">SKU: {variant.sku}</span>
+                    <span className="text-blue-500 hover:text-blue-600">📋</span>
+                  </button>
+                  {copiedSku === variant.sku && (
+                    <div className="absolute right-0 top-6 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg">
+                      SKU copied!
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <div className="flex items-center">
