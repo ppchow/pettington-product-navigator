@@ -4,7 +4,6 @@ import Layout from '@/components/Layout';
 import FilterSection from '@/components/FilterSection';
 import ProductCard from '../components/ProductCard';
 import { Product } from '@/types';
-import DebugPanel from '@/components/DebugPanel';
 
 interface Collection {
   handle: string;
@@ -61,49 +60,113 @@ export default function Home() {
   useEffect(() => {
     async function loadCollections() {
       try {
+        // Try to load from cache first
+        const cachedCollections = localStorage.getItem('collections');
+        if (!isOnline && cachedCollections) {
+          const parsedCollections = JSON.parse(cachedCollections);
+          setCollections(parsedCollections);
+          return;
+        }
+
         const shopify = getShopifyClient();
         const collectionsData = await shopify.getCollections();
         const filteredCollections = collectionsData.filter((collection: Collection) =>
           allowedCollections.includes(collection.handle)
         );
         setCollections(filteredCollections);
+        
+        // Cache the collections
+        localStorage.setItem('collections', JSON.stringify(filteredCollections));
       } catch (error) {
         console.error('Error loading collections:', error);
         setError('Failed to load collections');
+        
+        // Try to load from cache if network request fails
+        const cachedCollections = localStorage.getItem('collections');
+        if (cachedCollections) {
+          setCollections(JSON.parse(cachedCollections));
+          setError(null);
+        }
       }
     }
 
     loadCollections();
-  }, []);
+  }, [isOnline]);
 
   // Load products
   useEffect(() => {
     async function loadProducts() {
+      if (!selectedCollection) return;
+      
       setIsLoading(true);
       setError(null);
+
+      // Try to load from cache first
+      const cacheKey = `products_${selectedCollection}`;
+      const cachedProducts = localStorage.getItem(cacheKey);
+
+      // If offline and we have cached data, use it
+      if (!isOnline) {
+        if (cachedProducts) {
+          try {
+            const parsedProducts = JSON.parse(cachedProducts);
+            setProducts(parsedProducts);
+            setFilteredProducts(parsedProducts);
+            const vendors = Array.from(new Set(parsedProducts.map((product: Product) => product.vendor))) as string[];
+            setAvailableVendors(vendors);
+          } catch (error) {
+            console.error('Error parsing cached products:', error);
+            setError('Failed to load cached products');
+          }
+        } else {
+          setError('No cached products available offline');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Online: try to fetch fresh data
       try {
         const shopify = getShopifyClient();
-        if (selectedCollection) {
-          const productsData = await shopify.getProductsByCollection(selectedCollection);
-          console.log('Loaded products:', productsData); // Debug log
-          setProducts(productsData);
-          
-          // Extract unique vendors
-          const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
-          setAvailableVendors(vendors);
-          
-          // Initialize filtered products
-          setFilteredProducts(productsData);
+        const productsData = await shopify.getProductsByCollection(selectedCollection);
+        
+        // Cache the fresh data
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify(productsData));
+        } catch (cacheError) {
+          console.warn('Failed to cache products:', cacheError);
         }
+
+        setProducts(productsData);
+        const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
+        setAvailableVendors(vendors);
+        setFilteredProducts(productsData);
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error fetching products:', error);
+        
+        // On network error, try to use cached data
+        if (cachedProducts) {
+          try {
+            const parsedProducts = JSON.parse(cachedProducts);
+            setProducts(parsedProducts);
+            setFilteredProducts(parsedProducts);
+            const vendors = Array.from(new Set(parsedProducts.map((product: Product) => product.vendor))) as string[];
+            setAvailableVendors(vendors);
+            setError('Using cached data - some information may be outdated');
+          } catch (parseError) {
+            console.error('Error parsing cached products:', parseError);
+            setError('Failed to load products');
+          }
+        } else {
+          setError('Failed to load products and no cache available');
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
     loadProducts();
-  }, [selectedCollection]);
+  }, [selectedCollection, isOnline]);
 
   // Apply filters
   useEffect(() => {
@@ -236,7 +299,6 @@ export default function Home() {
             </div>
           </>
         )}
-        {discountSettings && <DebugPanel discountSettings={discountSettings} />}
       </div>
     </Layout>
   );
