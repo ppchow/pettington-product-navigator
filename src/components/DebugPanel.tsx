@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getDiscountSettings } from '@/lib/shopify';
+import { getShopifyClient } from '@/lib/shopify';
 import { DiscountSettings } from '@/types';
 
 interface DebugPanelProps {
@@ -16,7 +16,8 @@ export default function DebugPanel({ discountSettings: propDiscountSettings }: D
     setLoading(true);
     setError(null);
     try {
-      const settings = await getDiscountSettings();
+      const shopify = getShopifyClient();
+      const settings = await shopify.getDiscountSettings();
       setDebugDiscountSettings(settings);
       console.log('Discount settings:', settings);
     } catch (err) {

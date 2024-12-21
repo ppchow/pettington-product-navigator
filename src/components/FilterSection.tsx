@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const collectionTags = {
   'stella-chewys': [
@@ -84,6 +84,8 @@ interface FilterSectionProps {
   currentCollection: string;
   collections: { handle: string; title: string }[];
   onCollectionSelect: (collection: string) => void;
+  isLoading?: boolean;
+  isOnline: boolean;
 }
 
 export default function FilterSection({
@@ -98,30 +100,65 @@ export default function FilterSection({
   currentCollection,
   collections,
   onCollectionSelect,
+  isLoading,
+  isOnline,
 }: FilterSectionProps) {
-  // Debug logs
-  React.useEffect(() => {
-    console.log('Raw collections prop:', JSON.stringify(collections, null, 2));
-    console.log('Collection order:', collectionOrder);
-    console.log('Collection titles:', collectionTitles);
-    console.log('Number of collections:', collections.length);
-    console.log('Collection handles:', collections.map(c => c.handle));
+  const [cachedCollections, setCachedCollections] = React.useState<{[key: string]: 'cached' | 'none'}>({});
+  const [isCaching, setIsCaching] = React.useState<string | null>(null);
+
+  const checkCacheStatus = React.useCallback(async () => {
+    const cached: {[key: string]: 'cached' | 'none'} = {};
+    
+    for (const collection of collections) {
+      const cacheKey = `products_${collection.handle}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      cached[collection.handle] = cachedData ? 'cached' : 'none';
+    }
+    
+    setCachedCollections(cached);
   }, [collections]);
 
-  // Get the appropriate tags for the current collection
+  React.useEffect(() => {
+    checkCacheStatus();
+  }, [checkCacheStatus]);
+
+  const handleCollectionClick = async (handle: string) => {
+    if (!isOnline && cachedCollections[handle] !== 'cached') {
+      return;
+    }
+    
+    onCollectionSelect(handle);
+    if (isOnline && (!cachedCollections[handle] || cachedCollections[handle] === 'none')) {
+      setIsCaching(handle);
+      setTimeout(() => {
+        setCachedCollections(prev => ({...prev, [handle]: 'cached'}));
+        setIsCaching(null);
+      }, 1000);
+    }
+  };
+
+  const getCacheIcon = (handle: string) => {
+    if (isCaching === handle && isOnline) return '⬇️';
+    return cachedCollections[handle] === 'cached' ? '📥' : null;
+  };
+
+  const getCacheTooltip = (handle: string) => {
+    if (isCaching === handle) return 'Downloading...';
+    return cachedCollections[handle] === 'cached' 
+      ? 'Available offline'
+      : 'Not cached';
+  };
+
   const availableTags = collectionTags[currentCollection as keyof typeof collectionTags] || collectionTags.default;
 
-  // Determine if we should show vendor filter for current collection
   const shouldShowVendorFilter = currentCollection !== 'pet-supplements' && showVendorFilter;
 
-  // Sort collections based on the order array
   const sortedCollections = React.useMemo(() => {
     const sorted = [...collections].sort((a, b) => {
       const indexA = collectionOrder.indexOf(a.handle);
       const indexB = collectionOrder.indexOf(b.handle);
       return indexA - indexB;
     });
-    console.log('Sorted collections:', sorted);
     return sorted;
   }, [collections]);
 
@@ -160,28 +197,43 @@ export default function FilterSection({
           <div>
             <h3 className="text-lg font-semibold mb-3">Collections</h3>
             <div className="flex flex-nowrap gap-2 pr-4">
-              {sortedCollections.map((collection) => (
-                <button
-                  key={collection.handle}
-                  onClick={() => onCollectionSelect(collection.handle)}
-                  className={`
-                    whitespace-nowrap
-                    px-3 py-1.5 rounded-full text-sm font-medium
-                    transition-all duration-200 ease-in-out
-                    flex items-center gap-1 shrink-0
-                    ${
-                      currentCollection === collection.handle
-                        ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
-                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                    }
-                  `}
-                >
-                  {collectionTitles[collection.handle as keyof typeof collectionTitles] || collection.title}
-                  {currentCollection === collection.handle && (
-                    <span className="ml-1 text-lg leading-none">&times;</span>
-                  )}
-                </button>
-              ))}
+              {sortedCollections.map((collection) => {
+                const cacheIcon = getCacheIcon(collection.handle);
+                
+                return (
+                  <button
+                    key={collection.handle}
+                    onClick={() => handleCollectionClick(collection.handle)}
+                    className={`
+                      whitespace-nowrap
+                      px-3 py-1.5 rounded-full text-sm font-medium
+                      transition-all duration-200 ease-in-out
+                      flex items-center gap-1 shrink-0 relative
+                      ${
+                        currentCollection === collection.handle
+                          ? 'bg-purple-100 text-purple-800 border-2 border-purple-300 hover:bg-purple-200'
+                          : !isOnline && cachedCollections[collection.handle] !== 'cached'
+                          ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                      }
+                    `}
+                    disabled={!isOnline && cachedCollections[collection.handle] !== 'cached'}
+                  >
+                    {collectionTitles[collection.handle as keyof typeof collectionTitles] || collection.title}
+                    {cacheIcon && (
+                      <span 
+                        className="absolute -top-1 -right-1 text-xs"
+                        title={getCacheTooltip(collection.handle)}
+                      >
+                        {cacheIcon}
+                      </span>
+                    )}
+                    {currentCollection === collection.handle && (
+                      <span className="ml-1 text-lg leading-none">&times;</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

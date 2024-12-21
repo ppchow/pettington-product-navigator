@@ -1,0 +1,304 @@
+import { Product } from '@/types';
+
+const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN!;
+const storefrontAccessToken = process.env.NEXT_PUBLIC_STOREFRONT_ACCESS_TOKEN!;
+
+async function shopifyFetch<T>(query: string): Promise<T> {
+  try {
+    if (!navigator.onLine) {
+      throw new Error('Offline');
+    }
+
+    const response = await fetch(`https://${domain}/api/2024-01/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+      },
+      body: JSON.stringify({
+        query,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    if (json.errors) {
+      throw new Error(json.errors[0].message);
+    }
+
+    return json.data;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Offline') {
+      throw error;
+    }
+    console.error('Error fetching from Shopify:', error);
+    throw error;
+  }
+}
+
+export function getShopifyClient() {
+  const getDiscountSettings = async () => {
+    try {
+      if (!navigator.onLine) {
+        const cachedSettings = localStorage.getItem('discount_settings');
+        if (cachedSettings) {
+          return JSON.parse(cachedSettings);
+        }
+        return {
+          prescription_enabled: false,
+          prescription_percentage: 0,
+          parasite_enabled: false,
+          parasite_percentage: 0,
+          default_enabled: false,
+          default_percentage: 0,
+        };
+      }
+
+      const data = await shopifyFetch<any>(`
+        query {
+          metaobjects(type: "event_discount_settings", first: 1) {
+            edges {
+              node {
+                fields {
+                  key
+                  value
+                }
+              }
+            }
+          }
+        }
+      `);
+
+      if (!data?.metaobjects?.edges?.[0]?.node) {
+        console.error('No discount settings found in metaobject');
+        return {
+          prescription_enabled: false,
+          prescription_percentage: 0,
+          parasite_enabled: false,
+          parasite_percentage: 0,
+          default_enabled: false,
+          default_percentage: 0,
+        };
+      }
+
+      const fields = data.metaobjects.edges[0].node.fields;
+      const settings = {
+        prescription_enabled: fields.find((f: any) => f.key === 'prescription_enabled')?.value === 'true',
+        prescription_percentage: Number(fields.find((f: any) => f.key === 'prescription_percentage')?.value || '0'),
+        parasite_enabled: fields.find((f: any) => f.key === 'parasite_enabled')?.value === 'true',
+        parasite_percentage: Number(fields.find((f: any) => f.key === 'parasite_percentage')?.value || '0'),
+        default_enabled: fields.find((f: any) => f.key === 'default_enabled')?.value === 'true',
+        default_percentage: Number(fields.find((f: any) => f.key === 'default_percentage')?.value || '0'),
+      };
+
+      // Cache the settings
+      localStorage.setItem('discount_settings', JSON.stringify(settings));
+      return settings;
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Offline') {
+        const cachedSettings = localStorage.getItem('discount_settings');
+        if (cachedSettings) {
+          return JSON.parse(cachedSettings);
+        }
+      }
+      console.error('Error fetching discount settings:', error);
+      return {
+        prescription_enabled: false,
+        prescription_percentage: 0,
+        parasite_enabled: false,
+        parasite_percentage: 0,
+        default_enabled: false,
+        default_percentage: 0,
+      };
+    }
+  };
+
+  const getProductsByCollection = async (collectionHandle: string): Promise<Product[]> => {
+    try {
+      if (!navigator.onLine) {
+        const cachedProducts = localStorage.getItem(`products_${collectionHandle}`);
+        if (cachedProducts) {
+          return JSON.parse(cachedProducts);
+        }
+        throw new Error('No cached products available offline');
+      }
+
+      const discountSettings = await getDiscountSettings();
+      const data = await shopifyFetch<any>(`
+        query {
+          collection(handle: "${collectionHandle}") {
+            products(first: 250) {
+              edges {
+                node {
+                  id
+                  title
+                  vendor
+                  tags
+                  images(first: 1) {
+                    edges {
+                      node {
+                        url
+                        altText
+                      }
+                    }
+                  }
+                  variants(first: 250) {
+                    edges {
+                      node {
+                        id
+                        sku
+                        title
+                        priceV2 {
+                          amount
+                          currencyCode
+                        }
+                        compareAtPriceV2 {
+                          amount
+                          currencyCode
+                        }
+                        availableForSale
+                        image {
+                          url
+                          altText
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `);
+
+      if (!data?.collection?.products?.edges) {
+        throw new Error('No products found in collection');
+      }
+
+      const products = data.collection.products.edges.map((edge: any) => {
+        const product = edge.node;
+        return {
+          id: product.id,
+          title: product.title,
+          vendor: product.vendor,
+          tags: product.tags,
+          images: product.images.edges.map((imgEdge: any) => ({
+            url: imgEdge.node.url,
+            altText: imgEdge.node.altText,
+          })),
+          variants: product.variants.edges.map((variantEdge: any) => {
+            const variant = variantEdge.node;
+            const price = parseFloat(variant.priceV2.amount);
+            const compareAtPrice = variant.compareAtPriceV2 
+              ? parseFloat(variant.compareAtPriceV2.amount)
+              : null;
+
+            let discountedPrice = null;
+            let discountPercentage = 0;
+
+            // Apply discounts based on product tags
+            if (discountSettings) {
+              if (discountSettings.prescription_enabled && product.tags.includes('prescription')) {
+                discountPercentage = discountSettings.prescription_percentage;
+              } else if (discountSettings.parasite_enabled && product.tags.includes('parasite')) {
+                discountPercentage = discountSettings.parasite_percentage;
+              } else if (discountSettings.default_enabled) {
+                discountPercentage = discountSettings.default_percentage;
+              }
+
+              if (discountPercentage > 0) {
+                discountedPrice = price * (1 - discountPercentage / 100);
+              }
+            }
+
+            return {
+              id: variant.id,
+              sku: variant.sku,
+              title: variant.title,
+              price,
+              compareAtPrice,
+              discountedPrice,
+              discountPercentage,
+              availableForSale: variant.availableForSale,
+              image: variant.image ? {
+                url: variant.image.url,
+                altText: variant.image.altText,
+              } : null,
+            };
+          }),
+        };
+      });
+
+      // Cache the products
+      localStorage.setItem(`products_${collectionHandle}`, JSON.stringify(products));
+      return products;
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Offline') {
+        const cachedProducts = localStorage.getItem(`products_${collectionHandle}`);
+        if (cachedProducts) {
+          return JSON.parse(cachedProducts);
+        }
+      }
+      console.error('Error fetching products:', error);
+      throw error;
+    }
+  };
+
+  const getCollections = async () => {
+    try {
+      if (!navigator.onLine) {
+        const cachedCollections = localStorage.getItem('collections');
+        if (cachedCollections) {
+          return JSON.parse(cachedCollections);
+        }
+        throw new Error('No cached collections available offline');
+      }
+
+      const data = await shopifyFetch<any>(`
+        query {
+          collections(first: 250) {
+            edges {
+              node {
+                id
+                handle
+                title
+              }
+            }
+          }
+        }
+      `);
+
+      if (!data?.collections?.edges) {
+        throw new Error('No collections found');
+      }
+
+      const collections = data.collections.edges.map((edge: any) => ({
+        id: edge.node.id,
+        handle: edge.node.handle,
+        title: edge.node.title,
+      }));
+
+      // Cache the collections
+      localStorage.setItem('collections', JSON.stringify(collections));
+      return collections;
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Offline') {
+        const cachedCollections = localStorage.getItem('collections');
+        if (cachedCollections) {
+          return JSON.parse(cachedCollections);
+        }
+      }
+      console.error('Error fetching collections:', error);
+      throw error;
+    }
+  };
+
+  return {
+    getProductsByCollection,
+    getCollections,
+    getDiscountSettings,
+  };
+}

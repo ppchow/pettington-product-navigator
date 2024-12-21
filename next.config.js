@@ -2,7 +2,44 @@ const withPWA = require('next-pwa')({
   dest: 'public',
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development'
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/.*\.myshopify\.com\/api\/.*$/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'shopify-api-cache',
+        expiration: {
+          maxEntries: 32,
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        },
+        networkTimeoutSeconds: 10
+      }
+    },
+    {
+      urlPattern: /^https:\/\/cdn\.shopify\.com\/.*/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'shopify-image-cache',
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+        }
+      }
+    },
+    {
+      urlPattern: /\/api\/(collections|products|shopify)/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        expiration: {
+          maxEntries: 32,
+          maxAgeSeconds: 24 * 60 * 60 // 24 hours
+        },
+        networkTimeoutSeconds: 10
+      }
+    }
+  ]
 })
 
 /** @type {import('next').NextConfig} */
@@ -26,6 +63,12 @@ const nextConfig = {
   },
   // Optimize for embedding in Shopify
   output: 'standalone',
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    config.watchOptions = {
+      ignored: ['**/backup/**', '**/backup.prev/**']
+    }
+    return config
+  }
 }
 
 module.exports = withPWA(nextConfig)

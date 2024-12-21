@@ -44,7 +44,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           width={500}
           height={500}
           className="h-full w-full object-cover object-center lg:h-full lg:w-full"
-          priority={false}
         />
       </div>
       <div className="mt-4">
