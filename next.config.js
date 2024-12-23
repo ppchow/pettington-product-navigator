@@ -13,7 +13,7 @@ const withPWA = require('next-pwa')({
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 10
+        networkTimeoutSeconds: 2
       }
     },
     {
@@ -39,7 +39,7 @@ const withPWA = require('next-pwa')({
           maxEntries: 32,
           maxAgeSeconds: 24 * 60 * 60 // 24 hours
         },
-        networkTimeoutSeconds: 10
+        networkTimeoutSeconds: 2
       }
     }
   ]
