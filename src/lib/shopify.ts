@@ -82,6 +82,7 @@ function parseMetaobjectField(fields: MetaobjectField[], key: string, type: 'boo
 function parseDiscountMetaobject(metaobject: DiscountMetaobject): DiscountSettings {
   console.log('Parsing metaobject fields:', metaobject.fields);
   const fields = metaobject.fields;
+  
   return {
     prescription_enabled: parseMetaobjectField(fields, 'prescription_enabled', 'boolean'),
     prescription_percentage: parseMetaobjectField(fields, 'prescription_percentage', 'number'),
