@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { Product } from '@/types';
 import { formatPrice } from '@/lib/utils';
 
@@ -33,12 +32,12 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group relative">
       <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none lg:h-80">
-        <Image
+        <img
           src={imageUrl}
           alt={imageAlt}
-          width={500}
-          height={500}
+          loading="lazy"
           className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+          style={{ aspectRatio: '1 / 1' }}
         />
       </div>
       <div className="mt-4">
