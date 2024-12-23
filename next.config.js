@@ -18,15 +18,18 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /^https:\/\/cdn\.shopify\.com\/.*/,
-      handler: 'StaleWhileRevalidate',
+      handler: 'CacheFirst',
       options: {
         cacheName: 'shopify-image-cache',
         expiration: {
-          maxEntries: 100,
+          maxEntries: 200,
           maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
         },
         cacheableResponse: {
           statuses: [0, 200]
+        },
+        matchOptions: {
+          ignoreVary: true
         }
       }
     },
