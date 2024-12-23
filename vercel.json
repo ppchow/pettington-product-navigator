@@ -3,9 +3,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN": "@shopify_store_domain",
-    "NEXT_PUBLIC_STOREFRONT_ACCESS_TOKEN": "@storefront_access_token"
-  }
+  "framework": "nextjs"
 }
