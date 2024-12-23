@@ -56,28 +56,9 @@ export default function Home() {
     };
   }, []);
 
-  // Load collections
+  // Load data
   useEffect(() => {
-    async function loadCollections() {
-      try {
-        const shopify = getShopifyClient();
-        const collectionsData = await shopify.getCollections();
-        const filteredCollections = collectionsData.filter((collection: Collection) =>
-          allowedCollections.includes(collection.handle)
-        );
-        setCollections(filteredCollections);
-      } catch (error) {
-        console.error('Error loading collections:', error);
-        setError('Failed to load collections');
-      }
-    }
-
-    loadCollections();
-  }, [isOnline]);
-
-  // Load products
-  useEffect(() => {
-    async function loadProducts() {
+    async function loadData() {
       if (!selectedCollection) return;
       
       setIsLoading(true);
@@ -85,23 +66,36 @@ export default function Home() {
 
       try {
         const shopify = getShopifyClient();
-        const productsData = await shopify.getProductsByCollection(selectedCollection);
-        setProducts(productsData);
+        const [collectionsData, productsData] = await Promise.all([
+          shopify.getCollections(),
+          shopify.getProductsByCollection(selectedCollection)
+        ]);
+
+        // Filter collections
+        const filteredCollections = collectionsData.filter((collection: Collection) =>
+          allowedCollections.includes(collection.handle)
+        );
+
+        // Extract vendors
         const vendors = Array.from(new Set(productsData.map((product: Product) => product.vendor))) as string[];
-        setAvailableVendors(vendors);
+
+        // Update all states
+        setCollections(filteredCollections);
+        setProducts(productsData);
         setFilteredProducts(productsData);
+        setAvailableVendors(vendors);
       } catch (error) {
-        console.error('Error fetching products:', error);
-        setError('Failed to load products. Please check your internet connection.');
+        console.error('Error loading data:', error);
+        setError('Failed to load data. Please check your internet connection.');
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadProducts();
+    loadData();
   }, [selectedCollection, isOnline]);
 
-  // Apply filters
+  // Filter products when filters change
   useEffect(() => {
     if (!products) return;
 
