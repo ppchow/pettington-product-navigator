@@ -9,30 +9,25 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [copiedSku, setCopiedSku] = useState<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
-  
+
   const mainVariant = product.variants[0];
   if (!mainVariant) return null;
 
   const imageUrl = mainVariant.image?.url || product.images[0]?.url || '';
   const imageAlt = mainVariant.image?.altText || product.images[0]?.altText || product.title;
 
-  const handleCopySku = (sku: string, event: React.MouseEvent) => {
-    navigator.clipboard.writeText(sku);
-    setCopiedSku(sku);
-    
-    // Calculate tooltip position
-    const rect = event.currentTarget.getBoundingClientRect();
-    setTooltipPosition({
-      x: rect.left + window.scrollX,
-      y: rect.bottom + window.scrollY
-    });
+  const handleCopySku = async (sku: string) => {
+    try {
+      await navigator.clipboard.writeText(sku);
+      setCopiedSku(sku);
 
-    // Hide tooltip after 2 seconds
-    setTimeout(() => {
-      setCopiedSku(null);
-      setTooltipPosition(null);
-    }, 2000);
+      // Hide tooltip after 2 seconds
+      setTimeout(() => {
+        setCopiedSku(null);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   return (
@@ -52,17 +47,17 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.title}
           </h3>
           <p className="mt-1 text-sm text-gray-500">{product.vendor}</p>
-          
+
           {/* Variants Section */}
           <div className="mt-3 divide-y divide-gray-100">
             {product.variants.map((variant) => (
               <div key={variant.id} className="py-2">
-                <div className="flex justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center">
                       <button
-                        onClick={(e) => handleCopySku(variant.sku, e)}
-                        className="group inline-flex items-center space-x-1 hover:bg-gray-100 rounded px-1.5 py-0.5 transition-colors shrink-0"
+                        onClick={() => handleCopySku(variant.sku)}
+                        className="group inline-flex items-center space-x-1 hover:bg-gray-100 rounded px-1.5 py-0.5 transition-colors shrink-0 relative"
                       >
                         <p className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{variant.sku}</p>
                         <span className="text-gray-400">
@@ -78,59 +73,57 @@ export default function ProductCard({ product }: ProductCardProps) {
                             </svg>
                           )}
                         </span>
+                        {copiedSku === variant.sku && (
+                          <div 
+                            className="absolute left-1/2 -translate-x-1/2 -bottom-8 z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-sm whitespace-nowrap"
+                          >
+                            Copied!
+                          </div>
+                        )}
                       </button>
                     </div>
                     {variant.title !== 'Default Title' && (
                       <p className="mt-0.5 text-xs text-gray-500 truncate pl-1.5">{variant.title}</p>
                     )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {!variant.availableForSale && (
-                      <span className="text-xs font-medium text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
-                        Not available
-                      </span>
-                    )}
-                    <div className="flex items-center space-x-1.5">
-                      {variant.discountedPrice ? (
-                        <>
-                          <span className="text-xs line-through text-gray-400">
-                            {formatPrice(variant.price)}
-                          </span>
-                          <span className="text-sm font-medium text-[#4CAF50]">
-                            {formatPrice(variant.discountedPrice)}
-                          </span>
-                          <span className="inline-flex items-center bg-[#4CAF50] px-1.5 py-0.5 text-xs font-medium text-white rounded">
-                            -{Math.round(variant.discountPercentage)}%
-                          </span>
-                        </>
-                      ) : variant.compareAtPrice ? (
-                        <>
-                          <span className="text-xs line-through text-gray-400">
-                            {formatPrice(variant.compareAtPrice)}
-                          </span>
+                  <div className="flex items-center justify-between sm:justify-end mt-1.5 sm:mt-0">
+                    <div className="flex items-center space-x-2">
+                      {!variant.availableForSale && (
+                        <span className="text-xs font-medium text-red-600 bg-red-50 px-1.5 py-0.5 rounded">
+                          Not available
+                        </span>
+                      )}
+                      <div className="flex items-center space-x-1.5">
+                        {variant.discountedPrice ? (
+                          <>
+                            <span className="text-xs line-through text-gray-400">
+                              {formatPrice(variant.price)}
+                            </span>
+                            <span className="text-sm font-medium text-[#4CAF50]">
+                              {formatPrice(variant.discountedPrice)}
+                            </span>
+                            <span className="inline-flex items-center bg-[#4CAF50] px-1.5 py-0.5 text-xs font-medium text-white rounded">
+                              -{Math.round(variant.discountPercentage)}%
+                            </span>
+                          </>
+                        ) : variant.compareAtPrice ? (
+                          <>
+                            <span className="text-xs line-through text-gray-400">
+                              {formatPrice(variant.compareAtPrice)}
+                            </span>
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatPrice(variant.price)}
+                            </span>
+                          </>
+                        ) : (
                           <span className="text-sm font-medium text-gray-900">
                             {formatPrice(variant.price)}
                           </span>
-                        </>
-                      ) : (
-                        <span className="text-sm font-medium text-gray-900">
-                          {formatPrice(variant.price)}
-                        </span>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-                {copiedSku === variant.sku && tooltipPosition && (
-                  <div 
-                    className="absolute z-10 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded shadow-sm"
-                    style={{
-                      top: tooltipPosition.y,
-                      left: tooltipPosition.x
-                    }}
-                  >
-                    Copied!
-                  </div>
-                )}
               </div>
             ))}
           </div>
