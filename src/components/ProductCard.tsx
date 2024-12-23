@@ -58,8 +58,8 @@ export default function ProductCard({ product }: ProductCardProps) {
                         onClick={() => handleCopySku(variant.sku)}
                         className="group inline-flex items-center space-x-1 hover:bg-gray-100 rounded px-1.5 py-0.5 transition-colors shrink-0 relative"
                       >
-                        <p className="text-xs font-medium text-gray-600 group-hover:text-gray-900">{variant.sku}</p>
-                        <span className="text-gray-400">
+                        <p className="text-xs font-medium text-gray-600 group-hover:text-gray-900 break-all max-w-[200px]">{variant.sku}</p>
+                        <span className="text-gray-400 flex-shrink-0">
                           {copiedSku === variant.sku ? (
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                               <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
