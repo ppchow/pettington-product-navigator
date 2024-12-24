@@ -11,3 +11,11 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
 }
+
+body::before {
+  content: '';
+  display: block;
+  background-color: #000000;
+  height: 4px;
+  width: 100%;
+}
