@@ -4,6 +4,7 @@ import Layout from '@/components/Layout';
 import FilterSection from '@/components/FilterSection';
 import ProductCard from '../components/ProductCard';
 import { Product } from '@/types';
+import { useRouter } from 'next/router';
 
 interface Collection {
   handle: string;
@@ -41,6 +42,8 @@ export default function Home() {
     'wellness-1',
     'pet-grooming'
   ];
+
+  const router = useRouter();
 
   useEffect(() => {
     const updateOnlineStatus = () => {
@@ -191,6 +194,10 @@ export default function Home() {
           </div>
         )}
 
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Products</h1>
+        </div>
+
         <div className="mb-6">
           <FilterSection
             availableVendors={availableVendors}
@@ -220,10 +227,9 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                />
+                <div key={product.id}>
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
           </>

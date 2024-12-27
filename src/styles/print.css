@@ -1,0 +1,131 @@
+/* Print-specific styles */
+@media print {
+  /* Reset background colors and ensure they print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide non-printable elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page setup for A4 */
+  @page {
+    size: A4;
+    margin: 0.5cm;
+  }
+
+  /* Basic body setup */
+  body {
+    font-size: 10pt;
+    line-height: 1.2;
+    background: white;
+    color: black;
+  }
+
+  /* Print row layout */
+  .print-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5cm;
+    page-break-inside: avoid;
+    margin-bottom: 0.5cm;
+  }
+
+  /* Ensure 4 rows (8 products) per page */
+  .print-row:nth-child(4n) {
+    page-break-after: always;
+  }
+
+  /* Product item styling */
+  .print-item {
+    border: 1px solid #000;
+    padding: 0.3cm;
+    break-inside: avoid;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Empty placeholder styling */
+  .print-item.empty {
+    border: none;
+    padding: 0;
+  }
+
+  /* Product title styling */
+  .product-title {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 0.2cm;
+    color: #000;
+    border-bottom: 1px solid #000;
+    padding-bottom: 0.1cm;
+    width: 100%;
+  }
+
+  /* Variants list styling */
+  .variants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2cm;
+    width: 100%;
+  }
+
+  /* Individual variant styling */
+  .variant-item {
+    padding: 0.1cm 0;
+    border-bottom: 1px dashed #ccc;
+    width: 100%;
+  }
+
+  .variant-item:last-child {
+    border-bottom: none;
+  }
+
+  .variant-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.3cm;
+    width: 100%;
+  }
+
+  .variant-title {
+    font-size: 10pt;
+    flex: 1;
+    margin-right: 0.5cm;
+  }
+
+  /* Price styling */
+  .price-container {
+    display: flex;
+    align-items: center;
+    gap: 0.2cm;
+    white-space: nowrap;
+    min-width: 120px;
+    justify-content: flex-end;
+  }
+
+  .original-price {
+    text-decoration: line-through;
+    color: #666;
+    font-size: 9pt;
+    position: relative;
+    top: 2px;
+  }
+
+  .discount-price {
+    color: #ff0000;
+    font-weight: bold;
+    font-size: 11pt;
+    line-height: 1;
+  }
+
+  .regular-price {
+    font-size: 11pt;
+    font-weight: bold;
+  }
+}
