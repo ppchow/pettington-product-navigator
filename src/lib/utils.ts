@@ -2,12 +2,13 @@ import { Product, DiscountSettings, ProductVariant, PRODUCT_TAGS, DISCOUNT_TYPES
 
 export function formatPrice(amount: string | number): string {
   const price = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const roundedPrice = Math.ceil(price);
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'HKD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(price);
+  }).format(roundedPrice);
 }
 
 export function calculateVariantDiscount(

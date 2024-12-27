@@ -9,6 +9,10 @@ const DEFAULT_DISCOUNT_SETTINGS: DiscountSettings = {
   parasite_percentage: 0,
   default_enabled: false,
   default_percentage: 0,
+  wellness_enabled: false,
+  wellness_percentage: 0,
+  sc_enabled: false,
+  sc_percentage: 0,
   lastUpdated: 0
 };
 
@@ -90,6 +94,10 @@ function parseDiscountMetaobject(metaobject: DiscountMetaobject): DiscountSettin
     parasite_percentage: parseMetaobjectField(fields, 'parasite_percentage', 'number'),
     default_enabled: parseMetaobjectField(fields, 'default_enabled', 'boolean'),
     default_percentage: parseMetaobjectField(fields, 'default_percentage', 'number'),
+    wellness_enabled: parseMetaobjectField(fields, 'wellness_enabled', 'boolean'),
+    wellness_percentage: parseMetaobjectField(fields, 'wellness_percentage', 'number'),
+    sc_enabled: parseMetaobjectField(fields, 'sc_enabled', 'boolean'),
+    sc_percentage: parseMetaobjectField(fields, 'sc_percentage', 'number'),
     lastUpdated: Date.now()
   };
 }
@@ -113,6 +121,12 @@ function calculateVariantDiscount(variant: { price: number }, tags: string[], di
     } else if (discountSettings.parasite_enabled && tags.includes(PRODUCT_TAGS.PARASITE)) {
       discountPercentage = discountSettings.parasite_percentage;
       console.log('✓ Applied parasite discount:', discountPercentage);
+    } else if (discountSettings.wellness_enabled && tags.includes(PRODUCT_TAGS.WELLNESS)) {
+      discountPercentage = discountSettings.wellness_percentage;
+      console.log('✓ Applied wellness discount:', discountPercentage);
+    } else if (discountSettings.sc_enabled && tags.includes(PRODUCT_TAGS.STELLA_CHEWYS)) {
+      discountPercentage = discountSettings.sc_percentage;
+      console.log('✓ Applied Stella & Chewys discount:', discountPercentage);
     } else if (discountSettings.default_enabled) {
       discountPercentage = discountSettings.default_percentage;
       console.log('✓ Applied default discount:', discountPercentage);

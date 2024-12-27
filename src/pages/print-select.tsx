@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { Product, Collection } from '@/types';
 import Layout from '@/components/Layout';
 import { getShopifyClient } from '@/lib/shopify';
+import { formatPrice } from '@/lib/utils';
 
 interface SelectedVariants {
   [productId: string]: {
@@ -323,13 +324,13 @@ const PrintSelect = () => {
                         <div>
                           <div className="font-medium">{variant.title}</div>
                           <div className="text-sm flex items-center">
-                            {variant.discountedPrice && (
+                            {variant.discountedPrice && showDiscountPrice && (
                               <span className="line-through text-gray-500 mr-2">
-                                ${parseFloat(variant.price).toFixed(2)}
+                                {formatPrice(variant.price)}
                               </span>
                             )}
-                            <span className={variant.discountedPrice ? 'text-red-600 font-bold' : ''}>
-                              ${(variant.discountedPrice ? parseFloat(variant.discountedPrice) : parseFloat(variant.price)).toFixed(2)}
+                            <span className={variant.discountedPrice && showDiscountPrice ? 'text-red-600 font-bold' : ''}>
+                              {formatPrice(variant.discountedPrice && showDiscountPrice ? variant.discountedPrice : variant.price)}
                             </span>
                           </div>
                         </div>

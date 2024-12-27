@@ -11,6 +11,10 @@ export interface DiscountSettings {
   parasite_percentage: number;
   default_enabled: boolean;
   default_percentage: number;
+  wellness_enabled: boolean;
+  wellness_percentage: number;
+  sc_enabled: boolean;
+  sc_percentage: number;
   lastUpdated: number; // timestamp for cache validation
 }
 
@@ -63,12 +67,16 @@ export interface Product {
 // Product tag constants
 export const PRODUCT_TAGS = {
   PRESCRIPTION: '處方糧',
-  PARASITE: '驅蟲除蚤產品'
+  PARASITE: '驅蟲除蚤產品',
+  WELLNESS: 'Wellness',
+  STELLA_CHEWYS: 'Stella & Chewys'
 } as const;
 
 // Discount types
 export const DISCOUNT_TYPES = {
   PRESCRIPTION: 'prescription',
   PARASITE: 'parasite',
-  DEFAULT: 'default'
+  DEFAULT: 'default',
+  WELLNESS: 'wellness',
+  STELLA_CHEWYS: 'stella-chewys'
 } as const;
