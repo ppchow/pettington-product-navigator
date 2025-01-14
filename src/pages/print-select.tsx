@@ -18,6 +18,7 @@ const PrintSelect = () => {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>('prescription-diet-cats-dogs');
   const [selectedVariants, setSelectedVariants] = useState<{ [key: string]: { [key: string]: boolean } }>({});
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -85,9 +86,23 @@ const PrintSelect = () => {
     loadData();
   }, [selectedCollection, isOnline]);
 
+  useEffect(() => {
+    if (products.length > 0) {
+      const filtered = products.filter(product => {
+        // If no tags selected, show all products
+        if (selectedTags.length === 0) return true;
+        
+        // Check if product has any of the selected tags
+        return product.tags.some(tag => selectedTags.includes(tag));
+      });
+      setFilteredProducts(filtered);
+    }
+  }, [products, selectedTags]);
+
   const handleCollectionSelect = (collection: string) => {
     setSelectedCollection(collection);
     setSelectedVariants({});
+    setSelectedTags([]);
   };
 
   const handleVariantSelection = (productId: string, variantId: string) => {
@@ -120,6 +135,14 @@ const PrintSelect = () => {
 
       return newState;
     });
+  };
+
+  const handleTagSelect = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
   };
 
   const isProductSelected = (productId: string) => {
@@ -190,6 +213,48 @@ const PrintSelect = () => {
     } catch (error) {
       console.error('Error exporting document:', error);
       alert('Failed to export document');
+    }
+  };
+
+  const handleExportDocCompact = async () => {
+    const selectedProducts = products.map(product => ({
+      ...product,
+      variants: product.variants
+        .filter(variant => selectedVariants[product.id]?.[variant.id])
+        .map(variant => ({
+          ...variant,
+          selected: true
+        }))
+    })).filter(product => product.variants.length > 0);
+    
+    try {
+      const response = await fetch('/api/export-doc-compact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          products: selectedProducts,
+          showDiscountPrice,
+          showSku,
+          selectedTags,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'product-list-compact.docx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export document. Please try again.');
     }
   };
 
@@ -264,10 +329,17 @@ const PrintSelect = () => {
               </button>
               <button
                 onClick={handleExportDoc}
-                className="ml-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                disabled={Object.keys(selectedVariants).length === 0}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                disabled={!isOnline}
               >
                 Export to Word
+              </button>
+              <button
+                onClick={handleExportDocCompact}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+                disabled={!isOnline}
+              >
+                Export Compact
               </button>
             </div>
           )}
@@ -291,12 +363,34 @@ const PrintSelect = () => {
           </select>
         </div>
 
+        <div className="flex flex-col space-y-4 p-4">
+          {/* Tag filter section */}
+          <div className="bg-white p-4 rounded shadow">
+            <h3 className="font-semibold mb-2">Filter by Tags</h3>
+            <div className="flex flex-wrap gap-2">
+              {Array.from(new Set(products.flatMap(p => p.tags))).map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagSelect(tag)}
+                  className={`px-3 py-1 rounded ${
+                    selectedTags.includes(tag)
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map((product) => (
               <div key={product.id} className="border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">

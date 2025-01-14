@@ -2,12 +2,7 @@ import { Product, DiscountSettings, ProductVariant, PRODUCT_TAGS, DISCOUNT_TYPES
 
 export function formatPrice(amount: string | number): string {
   const price = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'HKD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(price);
+  return `$${price.toFixed(2)}`;
 }
 
 export function calculateVariantDiscount(
