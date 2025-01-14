@@ -65,7 +65,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   data: imageBuffer,
                   transformation: {
                     width: 100,
-                    height: 100
+                    height: 100,
+                  },
+                  altText: {
+                    title: "Product Image",
+                    description: "Product Image",
                   }
                 })
               ] : [new TextRun({ text: 'No Image' })]
