@@ -67,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     width: 100,
                     height: 100,
                   },
-                  type: 'image/png',
+                  type: 'png',
                   fallback: {
                     width: 100,
                     height: 100,
