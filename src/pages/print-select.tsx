@@ -168,7 +168,7 @@ const PrintSelect = () => {
     if (!product) return false;
     
     return product.variants.every(
-      variant => selectedVariants[productId]?.[variant.id]
+      variant => selectedVariants[product.id]?.[variant.id]
     );
   };
 
@@ -283,7 +283,7 @@ const PrintSelect = () => {
   };
 
   // Get unique vendors from products
-  const uniqueVendors = [...new Set(products.map(product => product.vendor))].sort();
+  const uniqueVendors = Array.from(new Set(products.map(product => product.vendor))).sort();
 
   return (
     <Layout>
