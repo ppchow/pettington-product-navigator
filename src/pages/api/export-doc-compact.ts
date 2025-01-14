@@ -67,11 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     width: 100,
                     height: 100,
                   },
-                  type: 'png',
-                  fallback: {
-                    width: 100,
-                    height: 100,
-                  }
+                  type: 'png'
                 })
               ] : [new TextRun({ text: 'No Image' })]
             })],
