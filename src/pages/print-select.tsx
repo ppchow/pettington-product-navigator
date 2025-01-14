@@ -19,6 +19,7 @@ const PrintSelect = () => {
   const [selectedCollection, setSelectedCollection] = useState<string>('prescription-diet-cats-dogs');
   const [selectedVariants, setSelectedVariants] = useState<{ [key: string]: { [key: string]: boolean } }>({});
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -89,20 +90,29 @@ const PrintSelect = () => {
   useEffect(() => {
     if (products.length > 0) {
       const filtered = products.filter(product => {
-        // If no tags selected, show all products
-        if (selectedTags.length === 0) return true;
+        // If no tags and vendors selected, show all products
+        if (selectedTags.length === 0 && selectedVendors.length === 0) return true;
         
-        // Check if product has any of the selected tags
-        return product.tags.some(tag => selectedTags.includes(tag));
+        // Check tag filter
+        const passesTagFilter = selectedTags.length === 0 || 
+          product.tags.some(productTag => selectedTags.includes(productTag));
+
+        // Check vendor filter
+        const passesVendorFilter = selectedVendors.length === 0 || 
+          selectedVendors.includes(product.vendor);
+
+        // Product must pass both filters
+        return passesTagFilter && passesVendorFilter;
       });
       setFilteredProducts(filtered);
     }
-  }, [products, selectedTags]);
+  }, [products, selectedTags, selectedVendors]);
 
   const handleCollectionSelect = (collection: string) => {
     setSelectedCollection(collection);
     setSelectedVariants({});
     setSelectedTags([]);
+    setSelectedVendors([]);
   };
 
   const handleVariantSelection = (productId: string, variantId: string) => {
@@ -142,6 +152,14 @@ const PrintSelect = () => {
       prev.includes(tag) 
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
+    );
+  };
+
+  const handleVendorSelect = (vendor: string) => {
+    setSelectedVendors(prev => 
+      prev.includes(vendor)
+        ? prev.filter(v => v !== vendor)
+        : [...prev, vendor]
     );
   };
 
@@ -264,6 +282,9 @@ const PrintSelect = () => {
     );
   };
 
+  // Get unique vendors from products
+  const uniqueVendors = [...new Set(products.map(product => product.vendor))].sort();
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -273,7 +294,11 @@ const PrintSelect = () => {
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+                </svg>To https://github.com/ppchow/pettington-product-navigator.git
+                   4a2a6f1..fc8cc81  main -> main
+                To https://github.com/ppchow/pettington-product-navigator.git
+                   fc8cc81..03a2c35  main -> main
+                
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
@@ -379,6 +404,26 @@ const PrintSelect = () => {
                   }`}
                 >
                   {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Vendor filter section */}
+          <div className="bg-white p-4 rounded shadow">
+            <h3 className="font-semibold mb-2">Filter by Vendors</h3>
+            <div className="flex flex-wrap gap-2">
+              {uniqueVendors.map((vendor) => (
+                <button
+                  key={vendor}
+                  onClick={() => handleVendorSelect(vendor)}
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    selectedVendors.includes(vendor)
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  {vendor}
                 </button>
               ))}
             </div>
