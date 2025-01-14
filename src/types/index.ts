@@ -50,6 +50,7 @@ export interface ProductVariant {
   selectedOptions: SelectedOption[];
   discountedPrice: string | null;
   discountPercentage: number;
+  selected?: boolean;
 }
 
 export interface Product {
