@@ -1,5 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Document, Packer, Paragraph, Table, TableCell, TableRow, TextRun, WidthType, BorderStyle, AlignmentType, ImageRun } from 'docx';
+import { Product, ProductVariant } from '@/types';
+
+interface ExportRequest {
+  products: Product[];
+  showDiscountPrice: boolean;
+  showSku: boolean;
+  selectedTags: string[];
+}
 
 async function getImageAsBuffer(url: string): Promise<Buffer> {
   try {
@@ -18,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { products, showDiscountPrice, showSku, selectedTags } = req.body;
+    const { products, showDiscountPrice, showSku, selectedTags } = req.body as ExportRequest;
     const rows: TableRow[] = [];
     
     // Header row
@@ -36,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Product rows
     for (const product of products) {
-      const selectedVariants = product.variants.filter(v => v.selected);
+      const selectedVariants = product.variants.filter((v: ProductVariant) => v.selected);
       if (selectedVariants.length === 0) continue;
 
       // Get the first image from the product's images array
@@ -156,7 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-function createVariantTitleCell(variant: any) {
+function createVariantTitleCell(variant: ProductVariant) {
   return new TableCell({
     width: { size: 15, type: WidthType.PERCENTAGE },
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -171,7 +179,7 @@ function createVariantTitleCell(variant: any) {
   });
 }
 
-function createSkuCell(variant: any, showSku: boolean) {
+function createSkuCell(variant: ProductVariant, showSku: boolean) {
   return new TableCell({
     width: { size: 15, type: WidthType.PERCENTAGE },
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
@@ -188,7 +196,7 @@ function createSkuCell(variant: any, showSku: boolean) {
   });
 }
 
-function createPriceCell(variant: any, showDiscountPrice: boolean) {
+function createPriceCell(variant: ProductVariant, showDiscountPrice: boolean) {
   return new TableCell({
     width: { size: 15, type: WidthType.PERCENTAGE },
     margins: { top: 50, bottom: 50, left: 50, right: 50 },
